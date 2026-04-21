@@ -1,31 +1,36 @@
 openapi: 3.0.3
 info:
-  title: Template Service API
-  description: API for the template service
+  title: Chess Game API
+  description: API for managing Chess games
   version: 1.0.0
 servers:
   - url: http://localhost:8080
     description: Local development server
+tags:
+  - name: Game
+    description: Manage game lifecycle (create, read).
+  - name: GameAction
+    description: In-game actions performed by players.
 paths:
-  /trains:
+  /games:
     post:
-      summary: Create a new train
-      operationId: createTrain
+      summary: Start a new game
+      operationId: startGame
       tags:
-        - TrainWrite
+        - Game
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTrainRequest'
+              $ref: '#/components/schemas/StartGameRequest'
       responses:
         '201':
-          description: Train created successfully
+          description: Game started successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrainCreatedResponse'
+                $ref: '#/components/schemas/GameCreatedResponse'
         '400':
           description: Bad request
           content:
@@ -38,40 +43,133 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /trains/{trainId}:
-    post:
-      summary: Update an existing train
-      operationId: updateTrain
+  /games/{gameId}:
+    get:
+      summary: Get the current game state
+      operationId: getGame
       tags:
-        - TrainWrite
+        - Game
       parameters:
-        - name: trainId
+        - name: gameId
           in: path
           required: true
           schema:
             type: string
-          description: The unique identifier of the train to update
+          description: The unique identifier of the game
+      responses:
+        '200':
+          description: Game state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /games/{gameId}/moves:
+    get:
+      summary: Get all available moves
+      description: >
+        Returns all legal moves for the current player in the current position.
+        Includes special moves such as castling, en passant, and pawn promotion.
+      operationId: getAvailableMoves
+      tags:
+        - Game
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the game
+      responses:
+        '200':
+          description: Available moves retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableMovesResponse'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state (e.g. game already finished)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Make a move
+      description: >
+        The current player moves one of their pieces from a source square to a target square.
+        The move must be legal according to standard chess rules.
+
+        **Regular move:** Set `from` to the piece's current square and `to` to the destination square.
+
+        **Castling:** Move the king two squares towards the rook.
+        Kingside castling: from E1 to G1 (white) or E8 to G8 (black).
+        Queenside castling: from E1 to C1 (white) or E8 to C8 (black).
+        The server automatically moves the rook; the client only sends the king's move.
+
+        **En passant:** Move the pawn diagonally to the empty square behind the opponent's pawn (e.g. from E5 to D6).
+        The server recognizes the capture and removes the opponent's pawn automatically.
+
+        **Promotion:** Move the pawn to the last rank and set `promotionPiece` to the desired piece type.
+      operationId: makeMove
+      tags:
+        - GameAction
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the game
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTrainRequest'
+              $ref: '#/components/schemas/MakeMoveRequest'
       responses:
         '200':
-          description: Train updated successfully
+          description: Move applied successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrainResponse'
+                $ref: '#/components/schemas/GameState'
         '400':
-          description: Bad request
+          description: Illegal move (e.g. wrong player, piece cannot move there, would leave king in check)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
-          description: Train not found
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state (e.g. game already finished)
           content:
             application/json:
               schema:
@@ -82,27 +180,198 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    get:
-      summary: Get train by ID
-      operationId: getTrain
+  /games/{gameId}/resignation:
+    post:
+      summary: Resign from the game
+      description: The current player resigns, immediately ending the game in a loss for them.
+      operationId: resign
       tags:
-        - TrainRead
+        - GameAction
       parameters:
-        - name: trainId
+        - name: gameId
           in: path
           required: true
           schema:
             type: string
-          description: The unique identifier of the train
+          description: The unique identifier of the game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResignRequest'
       responses:
         '200':
-          description: Train retrieved successfully
+          description: Resignation recorded successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrainResponse'
+                $ref: '#/components/schemas/GameState'
         '404':
-          description: Train not found
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /games/{gameId}/draw-offer:
+    post:
+      summary: Offer a draw
+      description: >
+        The current player offers a draw to their opponent.
+        A draw can only be offered when no other draw offer is pending.
+      operationId: offerDraw
+      tags:
+        - GameAction
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrawOfferRequest'
+      responses:
+        '200':
+          description: Draw offer recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid request (e.g. wrong player, draw offer already pending)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /games/{gameId}/draw-offer/acceptance:
+    post:
+      summary: Accept a draw offer
+      description: >
+        The opponent accepts the pending draw offer, ending the game as a draw.
+      operationId: acceptDraw
+      tags:
+        - GameAction
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrawResponseRequest'
+      responses:
+        '200':
+          description: Draw accepted, game ended as draw
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid request (e.g. no pending draw offer, wrong player)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /games/{gameId}/draw-offer/declination:
+    post:
+      summary: Decline a draw offer
+      description: >
+        The opponent declines the pending draw offer, and the game continues.
+      operationId: declineDraw
+      tags:
+        - GameAction
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the game
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrawResponseRequest'
+      responses:
+        '200':
+          description: Draw offer declined, game continues
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameState'
+        '400':
+          description: Invalid request (e.g. no pending draw offer, wrong player)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Action not allowed in current game state
           content:
             application/json:
               schema:
@@ -115,66 +384,184 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    CreateTrainRequest:
+    Color:
+      type: string
+      description: >
+        The color of a player or piece.
+        Possible values: WHITE, BLACK.
+    PieceType:
+      type: string
+      description: >
+        The type of a chess piece.
+        Possible values: KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN.
+    Piece:
       type: object
       required:
-        - trainNumber
-        - maxSpeed
-        - name
+        - color
+        - type
       properties:
-        trainNumber:
-          type: integer
-          description: The train number
-        maxSpeed:
-          type: integer
-          description: The maximum speed of the train in km/h
-        name:
+        color:
+          $ref: '#/components/schemas/Color'
+        type:
+          $ref: '#/components/schemas/PieceType'
+    Square:
+      type: object
+      description: A square on the chess board identified by file (column) and rank (row).
+      required:
+        - file
+        - rank
+      properties:
+        file:
           type: string
-          description: The name of the train
-    TrainCreatedResponse:
+          description: >
+            The column of the square.
+            Possible values: A, B, C, D, E, F, G, H.
+        rank:
+          type: integer
+          description: The row of the square (1–8).
+          minimum: 1
+          maximum: 8
+    BoardPiece:
+      type: object
+      description: A piece placed on a specific square of the board.
+      required:
+        - square
+        - piece
+      properties:
+        square:
+          $ref: '#/components/schemas/Square'
+        piece:
+          $ref: '#/components/schemas/Piece'
+    GameStatus:
+      type: string
+      description: >
+        The current status of the game.
+        Possible values: IN_PROGRESS, CHECKMATE, STALEMATE, DRAW, RESIGNED.
+    GameState:
       type: object
       required:
-        - id
+        - gameId
+        - status
+        - currentTurn
+        - whitePlayerId
+        - blackPlayerId
+        - board
       properties:
-        id:
+        gameId:
           type: string
-          description: The unique identifier of the created train
-    UpdateTrainRequest:
+          description: The unique identifier of the game
+        status:
+          $ref: '#/components/schemas/GameStatus'
+        currentTurn:
+          $ref: '#/components/schemas/Color'
+        whitePlayerId:
+          type: string
+          description: The player ID of the player controlling the white pieces
+        blackPlayerId:
+          type: string
+          description: The player ID of the player controlling the black pieces
+        board:
+          type: array
+          description: All pieces currently on the board with their positions
+          items:
+            $ref: '#/components/schemas/BoardPiece'
+        pendingDrawOfferBy:
+          type: string
+          description: >
+            The player ID of the player who has made a pending draw offer, if any.
+            Null if no draw offer is currently pending.
+          nullable: true
+    StartGameRequest:
       type: object
       required:
-        - trainNumber
-        - maxSpeed
-        - name
+        - whitePlayerId
+        - blackPlayerId
       properties:
-        trainNumber:
-          type: integer
-          description: The train number
-        maxSpeed:
-          type: integer
-          description: The maximum speed of the train in km/h
-        name:
+        whitePlayerId:
           type: string
-          description: The name of the train
-    TrainResponse:
+          description: The player ID of the player who will control the white pieces
+        blackPlayerId:
+          type: string
+          description: The player ID of the player who will control the black pieces
+    GameCreatedResponse:
       type: object
       required:
-        - id
-        - trainNumber
-        - maxSpeed
-        - name
+        - gameId
       properties:
-        id:
+        gameId:
           type: string
-          description: The unique identifier of the train
-        trainNumber:
-          type: integer
-          description: The train number
-        maxSpeed:
-          type: integer
-          description: The maximum speed of the train in km/h
-        name:
+          description: The unique identifier of the created game
+    MakeMoveRequest:
+      type: object
+      required:
+        - playerId
+        - from
+        - to
+      properties:
+        playerId:
           type: string
-          description: The name of the train
+          description: The ID of the player making the move
+        from:
+          $ref: '#/components/schemas/Square'
+        to:
+          $ref: '#/components/schemas/Square'
+        promotionPiece:
+          $ref: '#/components/schemas/PieceType'
+          description: >
+            Required when a pawn reaches the last rank.
+            Possible values: QUEEN, ROOK, BISHOP, KNIGHT.
+          nullable: true
+    ResignRequest:
+      type: object
+      required:
+        - playerId
+      properties:
+        playerId:
+          type: string
+          description: The ID of the player who is resigning
+    DrawOfferRequest:
+      type: object
+      required:
+        - playerId
+      properties:
+        playerId:
+          type: string
+          description: The ID of the player offering the draw
+    DrawResponseRequest:
+      type: object
+      required:
+        - playerId
+      properties:
+        playerId:
+          type: string
+          description: The ID of the player accepting or declining the draw offer
+    AvailableMove:
+      type: object
+      description: A single legal move available to the current player.
+      required:
+        - from
+        - to
+      properties:
+        from:
+          $ref: '#/components/schemas/Square'
+        to:
+          $ref: '#/components/schemas/Square'
+        promotionPiece:
+          $ref: '#/components/schemas/PieceType'
+          description: >
+            Only present for pawn promotion moves.
+            Possible values: QUEEN, ROOK, BISHOP, KNIGHT.
+          nullable: true
+    AvailableMovesResponse:
+      type: object
+      required:
+        - moves
+      properties:
+        moves:
+          type: array
+          description: All legal moves for the current player
+          items:
+            $ref: '#/components/schemas/AvailableMove'
     ErrorResponse:
       type: object
       required:
