@@ -20,4 +20,32 @@ class MovementPatternTest {
         assertThat(pattern.rankDelta).isEqualTo(-1)
         assertThat(pattern.maxRange).isEqualTo(7)
     }
+
+    @Test
+    fun `movement pattern defaults maxRange to 7`() {
+        // given / when
+        val pattern = MovementPattern(1, 0)
+
+        // then
+        assertThat(pattern.maxRange).isEqualTo(7)
+    }
+
+    @Test
+    fun `movement pattern defaults canJump to false`() {
+        // given / when
+        val pattern = MovementPattern(1, 0)
+
+        // then
+        assertThat(pattern.canJump).isFalse()
+    }
+
+    @Test
+    fun `movement pattern defaults captureOnly and moveOnly to false`() {
+        // given / when
+        val pattern = MovementPattern(1, 0)
+
+        // then
+        assertThat(pattern.captureOnly).isFalse()
+        assertThat(pattern.moveOnly).isFalse()
+    }
 }

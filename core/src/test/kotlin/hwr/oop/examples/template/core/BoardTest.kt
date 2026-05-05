@@ -22,7 +22,7 @@ class BoardTest {
     fun `pieceAt returns placed piece`() {
         // given
         val board = Board()
-        val rook = Piece(PieceType.ROOK, Color.WHITE, Square(File.A, 1))
+        val rook = Rook(Color.WHITE, Square(File.A, 1))
 
         // when
         board.place(rook)
@@ -35,11 +35,11 @@ class BoardTest {
     fun `place fails when square is already occupied`() {
         // given
         val board = Board()
-        board.place(Piece(PieceType.KING, Color.WHITE, Square(File.E, 1)))
+        board.place(King(Color.WHITE, Square(File.E, 1)))
 
         // when / then
         assertThatThrownBy {
-            board.place(Piece(PieceType.ROOK, Color.WHITE, Square(File.E, 1)))
+            board.place(Rook(Color.WHITE, Square(File.E, 1)))
         }.isInstanceOf(IllegalArgumentException::class.java)
             .hasMessage("Square is already occupied")
     }
@@ -61,7 +61,7 @@ class BoardTest {
     fun `pieceAt returns piece on square`() {
         // given
         val board = Board()
-        val king = Piece(PieceType.KING, Color.BLACK, Square(File.E, 8))
+        val king = King(Color.BLACK, Square(File.E, 8))
 
         // when
         board.place(king)
@@ -75,7 +75,7 @@ class BoardTest {
     fun `applyMove moves piece to target square`() {
         // given
         val board = Board()
-        val king = Piece(PieceType.KING, Color.WHITE, Square(File.E, 1))
+        val king = King(Color.WHITE, Square(File.E, 1))
         board.place(king)
 
         // when
@@ -84,7 +84,7 @@ class BoardTest {
         // then
         val movedKing = board.pieceAt(Square(File.E, 2))
         assertThat(board.pieceAt(Square(File.E, 1))).isNull()
-        assertThat(movedKing?.type).isEqualTo(PieceType.KING)
+        assertThat(movedKing).isInstanceOf(King::class.java)
         assertThat(movedKing?.color).isEqualTo(Color.WHITE)
         assertThat(movedKing?.hasMoved).isTrue()
     }
@@ -105,8 +105,8 @@ class BoardTest {
     fun `applyMove fails when target square is occupied`() {
         // given
         val board = Board()
-        board.place(Piece(PieceType.KING, Color.WHITE, Square(File.E, 1)))
-        board.place(Piece(PieceType.ROOK, Color.WHITE, Square(File.E, 2)))
+        board.place(King(Color.WHITE, Square(File.E, 1)))
+        board.place(Rook(Color.WHITE, Square(File.E, 2)))
 
         // when / then
         assertThatThrownBy {

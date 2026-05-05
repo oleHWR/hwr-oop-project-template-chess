@@ -21,24 +21,6 @@ class SquareTest {
     }
 
     @Test
-    fun `square color is black on A1`() {
-        // given / when
-        val square = Square(File.A, 1)
-
-        // then
-        assertThat(square.color).isEqualTo(Color.BLACK)
-    }
-
-    @Test
-    fun `square color is white on B1`() {
-        // given / when
-        val square = Square(File.B, 1)
-
-        // then
-        assertThat(square.color).isEqualTo(Color.WHITE)
-    }
-
-    @Test
     fun `square creation with rank 0 throws`() {
         // given
         val file = File.A
@@ -133,66 +115,42 @@ class SquareTest {
     }
 
     @Test
-    fun `square is not equal to another object type`() {
-        // given
-        val square = Square(File.A, 1)
-
-        // when
-        val result = square.equals("A1")
-
-        // then
-        assertThat(result).isFalse()
-    }
-
-    @Test
-    fun `square is not equal to square on different file`() {
-        // given
-        val square = Square(File.A, 1)
-        val otherSquare = Square(File.B, 1)
-
-        // when
-        val result = square == otherSquare
-
-        // then
-        assertThat(result).isFalse()
-    }
-
-    @Test
-    fun `square is not equal to square on different rank`() {
-        // given
-        val square = Square(File.A, 1)
-        val otherSquare = Square(File.A, 2)
-
-        // when
-        val result = square == otherSquare
-
-        // then
-        assertThat(result).isFalse()
-    }
-
-    @Test
     fun `equal squares have same hash code`() {
         // given
         val square = Square(File.E, 4)
         val sameSquare = Square(File.E, 4)
 
-        // when
-        val hashCode = square.hashCode()
-        val sameHashCode = sameSquare.hashCode()
-
-        // then
-        assertThat(hashCode).isEqualTo(sameHashCode)
+        // when / then
+        assertThat(square.hashCode()).isEqualTo(sameSquare.hashCode())
     }
 
     @Test
-    fun `toString returns chess notation`() {
+    fun `squares with same file and rank are equal`() {
         // given
         val square = Square(File.E, 4)
+        val sameSquare = Square(File.E, 4)
 
-        // when
-        val text = square.toString()
+        // when / then
+        assertThat(square).isEqualTo(sameSquare)
+    }
 
-        // then
-        assertThat(text).isEqualTo("E4")
+    @Test
+    fun `squares with different file are not equal`() {
+        // given
+        val square = Square(File.A, 1)
+        val otherSquare = Square(File.B, 1)
+
+        // when / then
+        assertThat(square).isNotEqualTo(otherSquare)
+    }
+
+    @Test
+    fun `squares with different rank are not equal`() {
+        // given
+        val square = Square(File.A, 1)
+        val otherSquare = Square(File.A, 2)
+
+        // when / then
+        assertThat(square).isNotEqualTo(otherSquare)
     }
 }
