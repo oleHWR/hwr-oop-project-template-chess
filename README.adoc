@@ -1,6 +1,4 @@
-= HWR OOP Lecture Project Template
-
-// TODO: Change headline to better fit your project!
+= The game of Chess - Team Rooks
 
 This repository contains a student project created for an ongoing lecture on object-oriented programming with Kotlin at HWR Berlin (summer term 2026).
 
@@ -9,7 +7,11 @@ Do not rely on it!
 
 == Feature Liste
 
-// TODO : Add a list of features that your project implements. This can be a simple bullet list or a tables
+* [x] Implemented board and most pieces
+* [x] Implemented ability to move pieces
+* [ ] WIP ability to capture pieces
+* [ ] WIP Complexer Chess rules
+* [ ] WIP turn history and persistance
 
 == Modulstruktur
 
@@ -75,6 +77,8 @@ just
 | `just start-db` | PostgreSQL-Datenbank starten (erfordert Docker)
 | `just stop-db` | PostgreSQL-Datenbank stoppen
 | `just discard-db` | PostgreSQL-Datenbank stoppen und alle Daten löschen
+| `just mutation-test` | Mutationstests für das `core`-Modul ausführen (PITest)
+| `just mutation-test-open` | Aktuellen PITest-Bericht im Browser öffnen
 |===
 
 == Arbeiten mit dem Template-Repository (Upstream)
