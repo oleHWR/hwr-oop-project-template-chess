@@ -4,52 +4,100 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class PieceSymbolTest {
-	
+
 	@Test
 	fun `white king symbol is uppercase`() {
 		// given
 		val king = King(Color.WHITE, Square(File.E, 1))
-		
+
 		// when
 		val symbol = king.symbol()
-		
+
 		// then
 		assertThat(symbol).isEqualTo("K")
 	}
-	
+
+	@Test
+	fun `black king symbol is lowercase`() {
+		// given
+		val king = King(Color.BLACK, Square(File.E, 8))
+
+		// when
+		val symbol = king.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("k")
+	}
+
 	@Test
 	fun `black rook symbol is lowercase`() {
 		// given
 		val rook = Rook(Color.BLACK, Square(File.A, 8))
-		
+
 		// when
 		val symbol = rook.symbol()
-		
+
 		// then
 		assertThat(symbol).isEqualTo("r")
 	}
-	
+
 	@Test
-	fun `queen symbol is Q`() {
+	fun `white rook symbol is uppercase`() {
+		// given
+		val rook = Rook(Color.WHITE, Square(File.A, 1))
+
+		// when
+		val symbol = rook.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("R")
+	}
+
+	@Test
+	fun `white queen symbol is Q`() {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
-		
+
 		// when
 		val symbol = queen.symbol()
-		
+
 		// then
 		assertThat(symbol).isEqualTo("Q")
 	}
-	
+
 	@Test
-	fun `bishop symbol is B`() {
+	fun `black queen symbol is q`() {
+		// given
+		val queen = Queen(Color.BLACK, Square(File.D, 8))
+
+		// when
+		val symbol = queen.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("q")
+	}
+
+	@Test
+	fun `white bishop symbol is B`() {
 		// given
 		val bishop = Bishop(Color.WHITE, Square(File.C, 1))
-		
+
 		// when
 		val symbol = bishop.symbol()
-		
+
 		// then
 		assertThat(symbol).isEqualTo("B")
+	}
+
+	@Test
+	fun `black bishop symbol is b`() {
+		// given
+		val bishop = Bishop(Color.BLACK, Square(File.C, 8))
+
+		// when
+		val symbol = bishop.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("b")
 	}
 }
