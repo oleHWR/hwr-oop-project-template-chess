@@ -9,6 +9,15 @@ data class MovementDirection(
 ) {
 	val fileDelta = direction.fileDelta
 	val rankDelta = direction.rankDelta
+
+	// Whether stepping along this direction lands exactly on the given offset
+	// from the source square within maxRange.
+	fun reaches(fileDistance: Int, rankDistance: Int): Boolean {
+		for (steps in 1..maxRange) {
+			if (steps * fileDelta == fileDistance && steps * rankDelta == rankDistance) return true
+		}
+		return false
+	}
 }
 
 val ROOK_DIRECTIONS = listOf(
