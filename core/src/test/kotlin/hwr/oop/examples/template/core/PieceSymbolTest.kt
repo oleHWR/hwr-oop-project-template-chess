@@ -148,4 +148,21 @@ class PieceSymbolTest {
 		// then
 		assertThat(symbol).isEqualTo("p")
 	}
+
+	@Test
+	fun `Piece DefaultImpls symbol delegates to interface default`() {
+		// given
+		val whitePiece: Piece = King(Color.WHITE, Square(File.E, 1))
+		val blackPiece: Piece = King(Color.BLACK, Square(File.E, 8))
+		val defaultImpls = Class.forName("hwr.oop.examples.template.core.Piece\$DefaultImpls")
+		val symbolMethod = defaultImpls.getDeclaredMethod("symbol", Piece::class.java)
+
+		// when
+		val whiteSymbol = symbolMethod.invoke(null, whitePiece) as String
+		val blackSymbol = symbolMethod.invoke(null, blackPiece) as String
+
+		// then
+		assertThat(whiteSymbol).isEqualTo("K")
+		assertThat(blackSymbol).isEqualTo("k")
+	}
 }
