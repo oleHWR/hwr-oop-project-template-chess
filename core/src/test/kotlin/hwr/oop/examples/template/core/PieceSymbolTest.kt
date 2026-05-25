@@ -124,4 +124,28 @@ class PieceSymbolTest {
 		// then
 		assertThat(symbol).isEqualTo("n")
 	}
+
+	@Test
+	fun `white pawn symbol is P`() {
+		// given
+		val pawn = Pawn(Color.WHITE, Square(File.E, 2))
+
+		// when
+		val symbol = pawn.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("P")
+	}
+
+	@Test
+	fun `black pawn symbol is p`() {
+		// given
+		val pawn = Pawn(Color.BLACK, Square(File.E, 7))
+
+		// when
+		val symbol = pawn.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("p")
+	}
 }
