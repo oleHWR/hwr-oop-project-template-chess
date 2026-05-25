@@ -35,3 +35,14 @@ val KING_DIRECTIONS = listOf(
 	MovementDirection(Direction.DOWN_RIGHT, maxRange = 1),
 	MovementDirection(Direction.DOWN_LEFT, maxRange = 1)
 )
+
+val KNIGHT_DIRECTIONS = listOf(
+	MovementDirection(Direction.UP_UP_RIGHT, maxRange = 1, canJump = true),
+	MovementDirection(Direction.UP_UP_LEFT, maxRange = 1, canJump = true),
+	MovementDirection(Direction.DOWN_DOWN_RIGHT, maxRange = 1, canJump = true),
+	MovementDirection(Direction.DOWN_DOWN_LEFT, maxRange = 1, canJump = true),
+	MovementDirection(Direction.RIGHT_RIGHT_UP, maxRange = 1, canJump = true),
+	MovementDirection(Direction.RIGHT_RIGHT_DOWN, maxRange = 1, canJump = true),
+	MovementDirection(Direction.LEFT_LEFT_UP, maxRange = 1, canJump = true),
+	MovementDirection(Direction.LEFT_LEFT_DOWN, maxRange = 1, canJump = true)
+)

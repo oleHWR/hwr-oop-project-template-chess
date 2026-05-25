@@ -100,4 +100,28 @@ class PieceSymbolTest {
 		// then
 		assertThat(symbol).isEqualTo("b")
 	}
+
+	@Test
+	fun `white knight symbol is N`() {
+		// given
+		val knight = Knight(Color.WHITE, Square(File.B, 1))
+
+		// when
+		val symbol = knight.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("N")
+	}
+
+	@Test
+	fun `black knight symbol is n`() {
+		// given
+		val knight = Knight(Color.BLACK, Square(File.G, 8))
+
+		// when
+		val symbol = knight.symbol()
+
+		// then
+		assertThat(symbol).isEqualTo("n")
+	}
 }
