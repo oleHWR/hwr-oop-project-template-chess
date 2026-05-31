@@ -1,17 +1,20 @@
 package hwr.oop.examples.template.core
 
+enum class MovementUsage {
+	MOVE_AND_CAPTURE,
+	MOVE_ONLY,
+	CAPTURE_ONLY,
+}
+
 data class MovementDirection(
 	val direction: Direction,
 	val maxRange: Int = 7,
 	val canJump: Boolean = false,
-	val captureOnly: Boolean = false,
-	val moveOnly: Boolean = false,
+	val usage: MovementUsage = MovementUsage.MOVE_AND_CAPTURE,
 ) {
 	val fileDelta = direction.fileDelta
 	val rankDelta = direction.rankDelta
 
-	// Whether stepping along this direction lands exactly on the given offset
-	// from the source square within maxRange.
 	fun reaches(fileDistance: Int, rankDistance: Int): Boolean {
 		for (steps in 1..maxRange) {
 			if (steps * fileDelta == fileDistance && steps * rankDelta == rankDistance) return true
@@ -55,3 +58,16 @@ val KNIGHT_DIRECTIONS = listOf(
 	MovementDirection(Direction.LEFT_LEFT_UP, maxRange = 1, canJump = true),
 	MovementDirection(Direction.LEFT_LEFT_DOWN, maxRange = 1, canJump = true)
 )
+
+fun pawnDirections(color: Color, hasMoved: Boolean): List<MovementDirection> {
+	val forwardDirection = if (color == Color.WHITE) Direction.UP else Direction.DOWN
+	val leftCaptureDirection = if (color == Color.WHITE) Direction.UP_LEFT else Direction.DOWN_LEFT
+	val rightCaptureDirection = if (color == Color.WHITE) Direction.UP_RIGHT else Direction.DOWN_RIGHT
+	val forwardRange = if (hasMoved) 1 else 2
+
+	return listOf(
+		MovementDirection(forwardDirection, maxRange = forwardRange, usage = MovementUsage.MOVE_ONLY),
+		MovementDirection(leftCaptureDirection, maxRange = 1, usage = MovementUsage.CAPTURE_ONLY),
+		MovementDirection(rightCaptureDirection, maxRange = 1, usage = MovementUsage.CAPTURE_ONLY),
+	)
+}

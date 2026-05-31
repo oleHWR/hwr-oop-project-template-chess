@@ -1,6 +1,5 @@
 package hwr.oop.examples.template.core
 
-// Stores the main state of one chess game.
 class Game(
 	val id: GameID,
 	val board: Board = Board(),

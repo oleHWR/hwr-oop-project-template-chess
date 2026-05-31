@@ -38,13 +38,12 @@ class MovementDirectionTest {
 	}
 	
 	@Test
-	fun `movement direction defaults captureOnly and moveOnly to false`() {
+	fun `movement direction defaults to move and capture usage`() {
 		// given / when
 		val direction = MovementDirection(Direction.RIGHT)
 		
 		// then
-		assertThat(direction.captureOnly).isFalse()
-		assertThat(direction.moveOnly).isFalse()
+		assertThat(direction.usage).isEqualTo(MovementUsage.MOVE_AND_CAPTURE)
 	}
 	
 	@Test
@@ -75,5 +74,17 @@ class MovementDirectionTest {
 		// then
 		assertThat(direction.fileDelta).isEqualTo(1)
 		assertThat(direction.rankDelta).isEqualTo(2)
+	}
+
+	@Test
+	fun `movement direction with max range zero reaches no square`() {
+		// given
+		val direction = MovementDirection(Direction.RIGHT, maxRange = 0)
+
+		// when
+		val reaches = direction.reaches(1, 0)
+
+		// then
+		assertThat(reaches).isFalse()
 	}
 }

@@ -26,29 +26,27 @@ class PawnTest {
 	}
 
 	@Test
-	fun `white pawn forward direction goes up and is moveOnly`() {
+	fun `white pawn forward direction goes up and is move only`() {
 		// given
 		val pawn = Pawn(Color.WHITE, Square(File.E, 2))
 		// when
-		val forward = pawn.directions().single { it.moveOnly }
+		val forward = pawn.directions().single { it.usage == MovementUsage.MOVE_ONLY }
 		// then
 		assertThat(forward.fileDelta).isEqualTo(0)
 		assertThat(forward.rankDelta).isEqualTo(1)
-		assertThat(forward.moveOnly).isTrue()
-		assertThat(forward.captureOnly).isFalse()
+		assertThat(forward.usage).isEqualTo(MovementUsage.MOVE_ONLY)
 	}
 
 	@Test
-	fun `black pawn forward direction goes down and is moveOnly`() {
+	fun `black pawn forward direction goes down and is move only`() {
 		// given
 		val pawn = Pawn(Color.BLACK, Square(File.E, 7))
 		// when
-		val forward = pawn.directions().single { it.moveOnly }
+		val forward = pawn.directions().single { it.usage == MovementUsage.MOVE_ONLY }
 		// then
 		assertThat(forward.fileDelta).isEqualTo(0)
 		assertThat(forward.rankDelta).isEqualTo(-1)
-		assertThat(forward.moveOnly).isTrue()
-		assertThat(forward.captureOnly).isFalse()
+		assertThat(forward.usage).isEqualTo(MovementUsage.MOVE_ONLY)
 	}
 
 	@Test
@@ -56,13 +54,13 @@ class PawnTest {
 		// given
 		val pawn = Pawn(Color.WHITE, Square(File.E, 2))
 		// when
-		val captures = pawn.directions().filter { it.captureOnly }
+		val captures = pawn.directions().filter { it.usage == MovementUsage.CAPTURE_ONLY }
 		// then
 		assertThat(captures).hasSize(2)
 		assertThat(captures.map { it.fileDelta to it.rankDelta }.toSet())
 			.containsExactlyInAnyOrder(1 to 1, -1 to 1)
 		assertThat(captures).allMatch { it.maxRange == 1 }
-		assertThat(captures).noneMatch { it.moveOnly }
+		assertThat(captures).allMatch { it.usage == MovementUsage.CAPTURE_ONLY }
 	}
 
 	@Test
@@ -70,7 +68,7 @@ class PawnTest {
 		// given
 		val pawn = Pawn(Color.BLACK, Square(File.E, 7))
 		// when
-		val captures = pawn.directions().filter { it.captureOnly }
+		val captures = pawn.directions().filter { it.usage == MovementUsage.CAPTURE_ONLY }
 		// then
 		assertThat(captures.map { it.fileDelta to it.rankDelta }.toSet())
 			.containsExactlyInAnyOrder(1 to -1, -1 to -1)
@@ -81,7 +79,7 @@ class PawnTest {
 		// given
 		val pawn = Pawn(Color.WHITE, Square(File.E, 2))
 		// when
-		val forward = pawn.directions().single { it.moveOnly }
+		val forward = pawn.directions().single { it.usage == MovementUsage.MOVE_ONLY }
 		// then
 		assertThat(forward.maxRange).isEqualTo(2)
 	}
@@ -91,7 +89,7 @@ class PawnTest {
 		// given
 		val pawn = Pawn(Color.WHITE, Square(File.E, 4), hasMoved = true)
 		// when
-		val forward = pawn.directions().single { it.moveOnly }
+		val forward = pawn.directions().single { it.usage == MovementUsage.MOVE_ONLY }
 		// then
 		assertThat(forward.maxRange).isEqualTo(1)
 	}

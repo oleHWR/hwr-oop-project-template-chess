@@ -7,9 +7,9 @@ Do not rely on it!
 
 == Feature Liste
 
-* [x] Implemented board and most pieces
+* [x] Implemented board and pieces
 * [x] Implemented ability to move pieces
-* [ ] WIP ability to capture pieces
+* [x] Implemented ability to capture pieces
 * [ ] WIP Complexer Chess rules
 * [ ] WIP turn history and persistance
 

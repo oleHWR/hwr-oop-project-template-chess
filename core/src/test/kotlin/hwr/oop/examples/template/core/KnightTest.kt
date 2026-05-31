@@ -36,13 +36,13 @@ class KnightTest {
 	}
 
 	@Test
-	fun `no knight direction has captureOnly or moveOnly`() {
+	fun `knight directions can move and capture`() {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
 		val directions = knight.directions()
 		// then
-		assertThat(directions).noneMatch { it.captureOnly || it.moveOnly }
+		assertThat(directions).allMatch { it.usage == MovementUsage.MOVE_AND_CAPTURE }
 	}
 
 	@Test

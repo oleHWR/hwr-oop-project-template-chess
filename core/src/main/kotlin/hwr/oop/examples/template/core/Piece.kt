@@ -9,15 +9,13 @@ interface Piece {
 	fun directions(): List<MovementDirection>
 	fun moveTo(target: Square): Piece
 
-	// Whether this piece can capture the given target based on its movement directions.
-	// Path blockers between squares are intentionally not considered here — that belongs
-	// to a higher-level move validator that knows the board state.
+	// Checks capture geometry only; board-level validation handles blockers.
 	fun canCapture(target: Piece): Boolean {
 		if (target.color == color) return false
 		val fileDistance = target.position.file.ordinal - position.file.ordinal
 		val rankDistance = target.position.rank - position.rank
 		return directions()
-			.filterNot { it.moveOnly }
+			.filterNot { it.usage == MovementUsage.MOVE_ONLY }
 			.any { it.reaches(fileDistance, rankDistance) }
 	}
 

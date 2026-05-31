@@ -17,6 +17,30 @@ class BoardTest {
 		// then
 		assertThat(square).isEqualTo(Square(File.H, 8))
 	}
+
+	@Test
+	fun `squareAt fails when rank is below board`() {
+		// given
+		val board = Board()
+
+		// when / then
+		assertThatThrownBy {
+			board.squareAt(File.A, 0)
+		}.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Rank must be between 1 and 8")
+	}
+
+	@Test
+	fun `squareAt fails when rank is above board`() {
+		// given
+		val board = Board()
+
+		// when / then
+		assertThatThrownBy {
+			board.squareAt(File.A, 9)
+		}.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Rank must be between 1 and 8")
+	}
 	
 	@Test
 	fun `pieceAt returns placed piece`() {
@@ -157,6 +181,170 @@ class BoardTest {
 					"        \n" +
 					"    B   \n" +
 					"R       "
+		)
+	}
+
+	@Test
+	fun `validCapture returns false when attacker square is empty`() {
+		// given
+		val board = Board()
+		board.place(Pawn(Color.BLACK, Square(File.A, 4)))
+
+		// when
+		val result = board.validCapture(Square(File.A, 1), Square(File.A, 4))
+
+		// then
+		assertThat(result).isFalse()
+	}
+
+	@Test
+	fun `validCapture returns false when target square is empty`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+
+		// when
+		val result = board.validCapture(Square(File.A, 1), Square(File.A, 4))
+
+		// then
+		assertThat(result).isFalse()
+	}
+
+	@Test
+	fun `validCapture returns false when piece cannot capture target by movement`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.BLACK, Square(File.B, 2)))
+
+		// when
+		val result = board.validCapture(Square(File.A, 1), Square(File.B, 2))
+
+		// then
+		assertThat(result).isFalse()
+	}
+
+	@Test
+	fun `validCapture returns true for knight even when another piece is between`() {
+		// given
+		val board = Board()
+		board.place(Knight(Color.WHITE, Square(File.B, 1)))
+		board.place(Pawn(Color.WHITE, Square(File.B, 2)))
+		board.place(Pawn(Color.BLACK, Square(File.C, 3)))
+
+		// when
+		val result = board.validCapture(Square(File.B, 1), Square(File.C, 3))
+
+		// then
+		assertThat(result).isTrue()
+	}
+
+	@Test
+	fun `validCapture returns true when path to target is clear`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.BLACK, Square(File.A, 4)))
+
+		// when
+		val result = board.validCapture(Square(File.A, 1), Square(File.A, 4))
+
+		// then
+		assertThat(result).isTrue()
+	}
+
+	@Test
+	fun `validCapture returns false when path to target is blocked`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.WHITE, Square(File.A, 2)))
+		board.place(Pawn(Color.BLACK, Square(File.A, 4)))
+
+		// when
+		val result = board.validCapture(Square(File.A, 1), Square(File.A, 4))
+
+		// then
+		assertThat(result).isFalse()
+	}
+
+	@Test
+	fun `squaresBetween returns squares on same file`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.A, 1), Square(File.A, 4))
+
+		// then
+		assertThat(squares).containsExactly(Square(File.A, 2), Square(File.A, 3))
+	}
+
+	@Test
+	fun `squaresBetween returns squares downward on same file`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.A, 4), Square(File.A, 1))
+
+		// then
+		assertThat(squares).containsExactly(Square(File.A, 3), Square(File.A, 2))
+	}
+
+	@Test
+	fun `squaresBetween returns squares on same rank`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.D, 4), Square(File.A, 4))
+
+		// then
+		assertThat(squares).containsExactly(Square(File.C, 4), Square(File.B, 4))
+	}
+
+	@Test
+	fun `squaresBetween returns squares on diagonal`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.A, 1), Square(File.D, 4))
+
+		// then
+		assertThat(squares).containsExactly(Square(File.B, 2), Square(File.C, 3))
+	}
+
+	@Test
+	fun `squaresBetween returns empty list for adjacent squares`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.E, 1), Square(File.E, 2))
+
+		// then
+		assertThat(squares).isEmpty()
+	}
+
+	@Test
+	fun `squaresBetween stops at edge when target is not on step path`() {
+		// given
+		val board = Board()
+
+		// when
+		val squares = board.squaresBetween(Square(File.A, 1), Square(File.B, 3))
+
+		// then
+		assertThat(squares).containsExactly(
+			Square(File.B, 2),
+			Square(File.C, 3),
+			Square(File.D, 4),
+			Square(File.E, 5),
+			Square(File.F, 6),
+			Square(File.G, 7),
+			Square(File.H, 8)
 		)
 	}
 }

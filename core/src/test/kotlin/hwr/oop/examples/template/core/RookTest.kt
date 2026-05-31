@@ -36,13 +36,13 @@ class RookTest {
 	}
 	
 	@Test
-	fun `no rook direction has captureOnly or moveOnly`() {
+	fun `rook directions can move and capture`() {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
 		val directions = rook.directions()
 		// then
-		assertThat(directions).noneMatch { it.captureOnly || it.moveOnly }
+		assertThat(directions).allMatch { it.usage == MovementUsage.MOVE_AND_CAPTURE }
 	}
 	
 	@Test

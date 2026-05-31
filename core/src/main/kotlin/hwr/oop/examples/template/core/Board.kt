@@ -3,9 +3,7 @@ package hwr.oop.examples.template.core
 private const val MIN_RANK = 1
 private const val MAX_RANK = 8
 
-// Represents the chessboard and keeps track of its squares and pieces.
 class Board {
-	// Stores all 64 squares by file and rank.
 	private val squares: Map<Pair<File, Int>, Square> =
 		buildMap {
 			for (file in File.entries) {
@@ -18,23 +16,19 @@ class Board {
 			}
 		}
 	
-	// Stores the pieces that are currently on the board by their square.
 	private val pieces: MutableMap<Square, Piece> = mutableMapOf()
 	
-	// Returns the square at a given file and rank.
 	fun squareAt(file: File, rank: Int): Square {
 		require(rank in MIN_RANK..MAX_RANK) { "Rank must be between $MIN_RANK and $MAX_RANK" }
 		
 		return squares.getValue(file to rank)
 	}
 	
-	// Adds a piece to the board if its square is still empty.
 	fun place(piece: Piece) {
 		require(pieceAt(piece.position) == null) { "Square is already occupied" }
 		pieces[piece.position] = piece
 	}
 	
-	// Applies a move by replacing the old piece with its moved version.
 	fun applyMove(move: Move) {
 		val piece = pieceAt(move.from)
 		require(piece != null) { "No piece on start square" }
@@ -62,8 +56,48 @@ class Board {
 		return rows.joinToString("\n")
 	}
 	
-	// Finds the piece on a square, or returns null if the square is empty.
 	fun pieceAt(square: Square): Piece? {
 		return pieces[square]
 	}
+	
+	fun validCapture(attacker: Square, target: Square): Boolean {
+		val attackingPiece = pieceAt(attacker) ?: return false
+		val targetPiece = pieceAt(target) ?: return false
+		
+		if (!attackingPiece.canCapture(targetPiece)) return false
+		if (attackingPiece.directions().any { it.canJump }) return true
+		
+		return squaresBetween(attacker, target).all { pieceAt(it) == null }
+	}
+	
+	fun squaresBetween(attacker: Square, target: Square): List<Square> {
+		val fileDistance = target.file.ordinal - attacker.file.ordinal
+		val rankDistance = target.rank - attacker.rank
+		
+		var fileStep = 0
+		var rankStep = 0
+		
+		if (fileDistance > 0) {
+			fileStep = 1
+		} else if (fileDistance < 0) {
+			fileStep = -1
+		}
+		
+		if (rankDistance > 0) {
+			rankStep = 1
+		} else if (rankDistance < 0) {
+			rankStep = -1
+		}
+		
+		val result = mutableListOf<Square>()
+		var current = attacker.offset(fileStep, rankStep)
+		
+		while (current != null && current != target) {
+			result.add(current)
+			current = current.offset(fileStep, rankStep)
+		}
+		
+		return result
+	}
+	
 }
