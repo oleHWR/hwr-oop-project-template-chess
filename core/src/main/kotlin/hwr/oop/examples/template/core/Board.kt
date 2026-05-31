@@ -78,15 +78,15 @@ class Board {
 		var rankStep = 0
 		
 		if (fileDistance > 0) {
-			fileStep = 1
+			fileStep = Direction.RIGHT.fileDelta
 		} else if (fileDistance < 0) {
-			fileStep = -1
+			fileStep = Direction.LEFT.fileDelta
 		}
 		
 		if (rankDistance > 0) {
-			rankStep = 1
+			rankStep = Direction.UP.rankDelta
 		} else if (rankDistance < 0) {
-			rankStep = -1
+			rankStep = Direction.DOWN.rankDelta
 		}
 		
 		val result = mutableListOf<Square>()
