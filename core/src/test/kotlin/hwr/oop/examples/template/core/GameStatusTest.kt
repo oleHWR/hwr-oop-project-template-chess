@@ -13,11 +13,33 @@ class GameStatusTest {
 		// then
 		assertThat(statuses).contains(
 			GameStatus.ONGOING,
-			GameStatus.CHECK,
-			GameStatus.CHECKMATE,
-			GameStatus.STALEMATE,
-			GameStatus.DRAW,
-			GameStatus.RESIGNED
+			GameStatus.FINISHED
+		)
+	}
+
+	@Test
+	fun `position status has expected values`() {
+		// given / when
+		val statuses = PositionStatus.entries
+
+		// then
+		assertThat(statuses).contains(
+			PositionStatus.NORMAL,
+			PositionStatus.CHECK
+		)
+	}
+
+	@Test
+	fun `game end reason has expected values`() {
+		// given / when
+		val reasons = GameEndReason.entries
+
+		// then
+		assertThat(reasons).contains(
+			GameEndReason.CHECKMATE,
+			GameEndReason.STALEMATE,
+			GameEndReason.DRAW_ACCEPTED,
+			GameEndReason.RESIGNED
 		)
 	}
 }

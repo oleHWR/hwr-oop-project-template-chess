@@ -1,6 +1,6 @@
 package hwr.oop.examples.template.core
 
-class Move(
+data class Move(
 	val from: Square,
 	val to: Square,
 )

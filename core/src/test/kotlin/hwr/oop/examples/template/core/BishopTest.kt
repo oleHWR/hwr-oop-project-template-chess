@@ -10,7 +10,7 @@ class BishopTest {
 		// given
 		val bishop = Bishop(Color.WHITE, Square(File.C, 1))
 		// when
-		val directions = bishop.directions()
+		val directions = MovementFactory.directionsFor(bishop)
 		// then
 		assertThat(directions).hasSize(4)
 	}
@@ -20,7 +20,7 @@ class BishopTest {
 		// given
 		val bishop = Bishop(Color.WHITE, Square(File.C, 1))
 		// when
-		val directions = bishop.directions()
+		val directions = MovementFactory.directionsFor(bishop)
 		// then
 		assertThat(directions).allMatch { it.maxRange == 7 }
 	}
@@ -30,7 +30,7 @@ class BishopTest {
 		// given
 		val bishop = Bishop(Color.WHITE, Square(File.C, 1))
 		// when
-		val directions = bishop.directions()
+		val directions = MovementFactory.directionsFor(bishop)
 		// then
 		assertThat(directions).noneMatch { it.canJump }
 	}
@@ -40,7 +40,7 @@ class BishopTest {
 		// given
 		val bishop = Bishop(Color.WHITE, Square(File.C, 1))
 		// when
-		val deltas = bishop.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(bishop).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).containsExactlyInAnyOrder(
 			1 to 1, -1 to 1, 1 to -1, -1 to -1

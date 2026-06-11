@@ -5,9 +5,8 @@ data class Knight(
 	override val position: Square,
 	override val hasMoved: Boolean = false,
 ) : Piece {
+	override val type = PieceType.KNIGHT
 	override val uppercaseSymbol = "N"
-
-	override fun directions() = KNIGHT_DIRECTIONS
 
 	override fun moveTo(target: Square) = copy(position = target, hasMoved = true)
 }

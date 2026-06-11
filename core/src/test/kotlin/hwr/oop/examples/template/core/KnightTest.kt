@@ -10,7 +10,7 @@ class KnightTest {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
-		val directions = knight.directions()
+		val directions = MovementFactory.directionsFor(knight)
 		// then
 		assertThat(directions).hasSize(8)
 	}
@@ -20,7 +20,7 @@ class KnightTest {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
-		val directions = knight.directions()
+		val directions = MovementFactory.directionsFor(knight)
 		// then
 		assertThat(directions).allMatch { it.maxRange == 1 }
 	}
@@ -30,7 +30,7 @@ class KnightTest {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
-		val directions = knight.directions()
+		val directions = MovementFactory.directionsFor(knight)
 		// then
 		assertThat(directions).allMatch { it.canJump }
 	}
@@ -40,7 +40,7 @@ class KnightTest {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
-		val directions = knight.directions()
+		val directions = MovementFactory.directionsFor(knight)
 		// then
 		assertThat(directions).allMatch { it.usage == MovementUsage.MOVE_AND_CAPTURE }
 	}
@@ -50,7 +50,7 @@ class KnightTest {
 		// given
 		val knight = Knight(Color.WHITE, Square(File.B, 1))
 		// when
-		val deltas = knight.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(knight).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).containsExactlyInAnyOrder(
 			1 to 2, -1 to 2, 1 to -2, -1 to -2,

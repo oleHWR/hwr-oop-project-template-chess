@@ -10,7 +10,7 @@ class RookTest {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
-		val directions = rook.directions()
+		val directions = MovementFactory.directionsFor(rook)
 		// then
 		assertThat(directions).hasSize(4)
 	}
@@ -20,7 +20,7 @@ class RookTest {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
-		val directions = rook.directions()
+		val directions = MovementFactory.directionsFor(rook)
 		// then
 		assertThat(directions).allMatch { it.maxRange == 7 }
 	}
@@ -30,7 +30,7 @@ class RookTest {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
-		val directions = rook.directions()
+		val directions = MovementFactory.directionsFor(rook)
 		// then
 		assertThat(directions).noneMatch { it.canJump }
 	}
@@ -40,7 +40,7 @@ class RookTest {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
-		val directions = rook.directions()
+		val directions = MovementFactory.directionsFor(rook)
 		// then
 		assertThat(directions).allMatch { it.usage == MovementUsage.MOVE_AND_CAPTURE }
 	}
@@ -50,7 +50,7 @@ class RookTest {
 		// given
 		val rook = Rook(Color.WHITE, Square(File.A, 1))
 		// when
-		val deltas = rook.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(rook).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).containsExactlyInAnyOrder(
 			0 to 1, 0 to -1, 1 to 0, -1 to 0

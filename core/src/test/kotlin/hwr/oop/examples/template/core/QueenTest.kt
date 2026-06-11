@@ -10,7 +10,7 @@ class QueenTest {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
 		// when
-		val directions = queen.directions()
+		val directions = MovementFactory.directionsFor(queen)
 		// then
 		assertThat(directions).hasSize(8)
 	}
@@ -20,7 +20,7 @@ class QueenTest {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
 		// when
-		val directions = queen.directions()
+		val directions = MovementFactory.directionsFor(queen)
 		// then
 		assertThat(directions).allMatch { it.maxRange == 7 }
 	}
@@ -30,7 +30,7 @@ class QueenTest {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
 		// when
-		val directions = queen.directions()
+		val directions = MovementFactory.directionsFor(queen)
 		// then
 		assertThat(directions).noneMatch { it.canJump }
 	}
@@ -40,7 +40,7 @@ class QueenTest {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
 		// when
-		val deltas = queen.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(queen).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).contains(
 			0 to 1, 0 to -1, 1 to 0, -1 to 0
@@ -52,7 +52,7 @@ class QueenTest {
 		// given
 		val queen = Queen(Color.WHITE, Square(File.D, 1))
 		// when
-		val deltas = queen.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(queen).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).contains(
 			1 to 1, -1 to 1, 1 to -1, -1 to -1

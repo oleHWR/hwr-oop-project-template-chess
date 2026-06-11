@@ -5,8 +5,27 @@ class Game(
 	val board: Board = Board(),
 	val turn: Turn = Turn(1, Color.WHITE),
 	val status: GameStatus = GameStatus.ONGOING,
+	val positionStatus: PositionStatus = PositionStatus.NORMAL,
+	val result: GameResult? = null,
+	val pendingDrawOfferBy: Color? = null,
 ) {
-	// for Debugging: Shows the current turn and board as text.
+	init {
+		if (status == GameStatus.ONGOING) {
+			require(result == null) { "An ongoing game cannot have a result" }
+		}
+
+		if (status == GameStatus.FINISHED) {
+			require(result != null) { "A finished game must have a result" }
+			require(pendingDrawOfferBy == null) { "A finished game cannot have a pending draw offer" }
+		}
+	}
+
+	fun availableMoves(): List<Move> {
+		if (status == GameStatus.FINISHED) return emptyList()
+
+		return board.pieces(turn.color).flatMap { MovementFactory.availableMoves(it, board) }
+	}
+
 	fun showBoard(): String {
 		return "Turn ${turn.number}:\n\n${board.showBoard()}"
 	}

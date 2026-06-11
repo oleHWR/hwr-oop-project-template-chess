@@ -10,7 +10,7 @@ class KingTest {
 		// given
 		val king = King(Color.WHITE, Square(File.E, 1))
 		// when
-		val directions = king.directions()
+		val directions = MovementFactory.directionsFor(king)
 		// then
 		assertThat(directions).hasSize(8)
 	}
@@ -20,7 +20,7 @@ class KingTest {
 		// given
 		val king = King(Color.WHITE, Square(File.E, 1))
 		// when
-		val directions = king.directions()
+		val directions = MovementFactory.directionsFor(king)
 		// then
 		assertThat(directions).allMatch { it.maxRange == 1 }
 	}
@@ -30,7 +30,7 @@ class KingTest {
 		// given
 		val king = King(Color.WHITE, Square(File.E, 1))
 		// when
-		val directions = king.directions()
+		val directions = MovementFactory.directionsFor(king)
 		// then
 		assertThat(directions).noneMatch { it.canJump }
 	}
@@ -40,7 +40,7 @@ class KingTest {
 		// given
 		val king = King(Color.WHITE, Square(File.E, 1))
 		// when
-		val deltas = king.directions().map { it.fileDelta to it.rankDelta }.toSet()
+		val deltas = MovementFactory.directionsFor(king).map { it.fileDelta to it.rankDelta }.toSet()
 		// then
 		assertThat(deltas).containsExactlyInAnyOrder(
 			0 to 1, 0 to -1, 1 to 0, -1 to 0,

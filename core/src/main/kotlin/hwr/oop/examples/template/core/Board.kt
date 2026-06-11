@@ -38,7 +38,6 @@ class Board {
 		pieces[move.to] = piece.moveTo(move.to)
 	}
 	
-	// for Debugging: Shows the board as 8 text rows, starting with rank 8.
 	fun showBoard(): String {
 		val rows = mutableListOf<String>()
 		
@@ -59,45 +58,16 @@ class Board {
 	fun pieceAt(square: Square): Piece? {
 		return pieces[square]
 	}
+
+	fun pieces(color: Color): List<Piece> {
+		return pieces.values.filter { it.color == color }
+	}
 	
 	fun validCapture(attacker: Square, target: Square): Boolean {
 		val attackingPiece = pieceAt(attacker) ?: return false
-		val targetPiece = pieceAt(target) ?: return false
-		
-		if (!attackingPiece.canCapture(targetPiece)) return false
-		if (attackingPiece.directions().any { it.canJump }) return true
-		
-		return squaresBetween(attacker, target).all { pieceAt(it) == null }
-	}
-	
-	fun squaresBetween(attacker: Square, target: Square): List<Square> {
-		val fileDistance = target.file.ordinal - attacker.file.ordinal
-		val rankDistance = target.rank - attacker.rank
-		
-		var fileStep = 0
-		var rankStep = 0
-		
-		if (fileDistance > 0) {
-			fileStep = Direction.RIGHT.fileDelta
-		} else if (fileDistance < 0) {
-			fileStep = Direction.LEFT.fileDelta
-		}
-		
-		if (rankDistance > 0) {
-			rankStep = Direction.UP.rankDelta
-		} else if (rankDistance < 0) {
-			rankStep = Direction.DOWN.rankDelta
-		}
-		
-		val result = mutableListOf<Square>()
-		var current = attacker.offset(fileStep, rankStep)
-		
-		while (current != null && current != target) {
-			result.add(current)
-			current = current.offset(fileStep, rankStep)
-		}
-		
-		return result
+		if (pieceAt(target) == null) return false
+
+		return Move(attacker, target) in MovementFactory.availableMoves(attackingPiece, this)
 	}
 	
 }

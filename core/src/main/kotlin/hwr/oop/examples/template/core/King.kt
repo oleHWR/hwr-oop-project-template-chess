@@ -5,9 +5,8 @@ data class King(
 	override val position: Square,
 	override val hasMoved: Boolean = false,
 ) : Piece {
+	override val type = PieceType.KING
 	override val uppercaseSymbol = "K"
-	
-	override fun directions() = KING_DIRECTIONS
 	
 	override fun moveTo(target: Square) = copy(position = target, hasMoved = true)
 }

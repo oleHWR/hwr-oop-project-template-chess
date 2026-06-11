@@ -5,9 +5,8 @@ data class Bishop(
 	override val position: Square,
 	override val hasMoved: Boolean = false,
 ) : Piece {
+	override val type = PieceType.BISHOP
 	override val uppercaseSymbol = "B"
-	
-	override fun directions() = BISHOP_DIRECTIONS
 	
 	override fun moveTo(target: Square) = copy(position = target, hasMoved = true)
 }
