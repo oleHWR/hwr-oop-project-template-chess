@@ -59,8 +59,11 @@ class Board {
 	fun applyMove(move: Move) {
 		val piece = pieceAt(move.from)
 		require(piece != null) { "No piece on start square" }
-		require(pieceAt(move.to) == null) { "Target square is already occupied" }
-		
+		val targetPiece = pieceAt(move.to)
+		require(targetPiece == null || targetPiece.color != piece.color) {
+			"Target square is already occupied"
+		}
+
 		pieces.remove(move.from)
 		pieces[move.to] = piece.moveTo(move.to)
 	}

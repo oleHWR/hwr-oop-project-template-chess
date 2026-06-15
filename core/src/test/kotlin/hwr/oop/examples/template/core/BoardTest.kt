@@ -131,12 +131,46 @@ class BoardTest {
 		val board = Board()
 		board.place(King(Color.WHITE, Square(File.E, 1)))
 		board.place(Rook(Color.WHITE, Square(File.E, 2)))
-		
+
 		// when / then
 		assertThatThrownBy {
 			board.applyMove(Move(Square(File.E, 1), Square(File.E, 2)))
 		}.isInstanceOf(IllegalArgumentException::class.java)
 			.hasMessage("Target square is already occupied")
+	}
+
+	@Test
+	fun `applyMove captures opponent piece on target square`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.BLACK, Square(File.A, 5)))
+
+		// when
+		board.applyMove(Move(Square(File.A, 1), Square(File.A, 5)))
+
+		// then
+		val movedRook = board.pieceAt(Square(File.A, 5))
+		assertThat(board.pieceAt(Square(File.A, 1))).isNull()
+		assertThat(movedRook).isInstanceOf(Rook::class.java)
+		assertThat(movedRook?.color).isEqualTo(Color.WHITE)
+		assertThat(movedRook?.hasMoved).isTrue()
+	}
+
+	@Test
+	fun `applyMove decrements opponent piece count after capture`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.BLACK, Square(File.A, 5)))
+		board.place(Pawn(Color.BLACK, Square(File.H, 7)))
+
+		// when
+		board.applyMove(Move(Square(File.A, 1), Square(File.A, 5)))
+
+		// then
+		assertThat(board.pieces(Color.BLACK)).hasSize(1)
+		assertThat(board.pieces(Color.WHITE)).hasSize(1)
 	}
 	
 	@Test
