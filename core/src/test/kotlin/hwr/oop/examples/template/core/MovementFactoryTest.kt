@@ -147,4 +147,80 @@ class MovementFactoryTest {
 			Move(Square(File.E, 2), Square(File.E, 4))
 		)
 	}
+
+	@Test
+	fun `bishop reaches every diagonal square on an empty board`() {
+		// given
+		val board = Board()
+		val bishop = Bishop(Color.WHITE, Square(File.A, 1))
+		board.place(bishop)
+
+		// when
+		val targets = MovementFactory.availableMoves(bishop, board).map { it.to }
+
+		// then — kills * vs / mutant: every step requires fileDelta*steps to land on the diagonal
+		assertThat(targets).containsExactlyInAnyOrder(
+			Square(File.B, 2),
+			Square(File.C, 3),
+			Square(File.D, 4),
+			Square(File.E, 5),
+			Square(File.F, 6),
+			Square(File.G, 7),
+			Square(File.H, 8),
+		)
+	}
+
+	@Test
+	fun `rook on H1 reaches A1 across the rank`() {
+		// given
+		val board = Board()
+		val rook = Rook(Color.WHITE, Square(File.H, 1))
+		board.place(rook)
+
+		// when
+		val targets = MovementFactory.availableMoves(rook, board).map { it.to }
+
+		// then — kills * vs / mutant on the file axis: needs steps up to 7 with fileDelta=-1
+		assertThat(targets).contains(
+			Square(File.G, 1),
+			Square(File.A, 1),
+		)
+		assertThat(targets).doesNotContain(Square(File.H, 1))
+	}
+
+	@Test
+	fun `canCapture rejects same-color target directly`() {
+		// given
+		val whiteRook = Rook(Color.WHITE, Square(File.A, 1))
+		val whitePawn = Pawn(Color.WHITE, Square(File.A, 5))
+
+		// when
+		val result = MovementFactory.canCapture(whiteRook, whitePawn)
+
+		// then
+		assertThat(result).isFalse()
+	}
+
+	@Test
+	fun `canCapture accepts enemy on a reachable line directly`() {
+		// given
+		val whiteRook = Rook(Color.WHITE, Square(File.A, 1))
+		val blackPawn = Pawn(Color.BLACK, Square(File.A, 5))
+
+		// when
+		val result = MovementFactory.canCapture(whiteRook, blackPawn)
+
+		// then
+		assertThat(result).isTrue()
+	}
+
+	@Test
+	fun `squaresBetween includes both intermediate squares on a 3-step diagonal`() {
+		// when
+		val squares = MovementFactory.squaresBetween(Square(File.A, 1), Square(File.D, 4))
+
+		// then — non-empty, exactly two squares: kills emptyList mutant and any off-by-one
+		assertThat(squares).hasSize(2)
+		assertThat(squares).containsExactly(Square(File.B, 2), Square(File.C, 3))
+	}
 }

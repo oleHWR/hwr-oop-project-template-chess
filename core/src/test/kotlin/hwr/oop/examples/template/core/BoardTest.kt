@@ -10,12 +10,36 @@ class BoardTest {
 	fun `squareAt returns square for file and rank`() {
 		// given
 		val board = Board()
-		
+
 		// when
 		val square = board.squareAt(File.H, 8)
-		
+
 		// then
 		assertThat(square).isEqualTo(Square(File.H, 8))
+	}
+
+	@Test
+	fun `squareAt accepts the lower rank boundary`() {
+		// given
+		val board = Board()
+
+		// when
+		val square = board.squareAt(File.A, 1)
+
+		// then
+		assertThat(square).isEqualTo(Square(File.A, 1))
+	}
+
+	@Test
+	fun `squareAt accepts the upper rank boundary`() {
+		// given
+		val board = Board()
+
+		// when
+		val square = board.squareAt(File.A, 8)
+
+		// then
+		assertThat(square).isEqualTo(Square(File.A, 8))
 	}
 
 	@Test

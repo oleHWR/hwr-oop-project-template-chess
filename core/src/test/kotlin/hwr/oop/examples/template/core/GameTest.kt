@@ -90,6 +90,8 @@ class GameTest {
 		val moves = game.availableMoves()
 
 		// then
+		assertThat(moves).isNotEmpty
+		assertThat(moves).hasSize(14)
 		assertThat(moves).allMatch { it.from == Square(File.A, 1) }
 		assertThat(moves).contains(Move(Square(File.A, 1), Square(File.A, 8)))
 	}

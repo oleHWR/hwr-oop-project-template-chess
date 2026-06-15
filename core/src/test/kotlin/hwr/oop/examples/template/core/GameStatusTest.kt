@@ -42,4 +42,24 @@ class GameStatusTest {
 			GameEndReason.RESIGNED
 		)
 	}
+
+	@Test
+	fun `game result stores reason and winner`() {
+		// given
+		val result = GameResult(GameEndReason.CHECKMATE, Color.WHITE)
+
+		// when / then
+		assertThat(result.reason).isEqualTo(GameEndReason.CHECKMATE)
+		assertThat(result.winner).isEqualTo(Color.WHITE)
+	}
+
+	@Test
+	fun `game result with no winner defaults to null`() {
+		// given
+		val result = GameResult(GameEndReason.STALEMATE)
+
+		// when / then
+		assertThat(result.reason).isEqualTo(GameEndReason.STALEMATE)
+		assertThat(result.winner).isNull()
+	}
 }
