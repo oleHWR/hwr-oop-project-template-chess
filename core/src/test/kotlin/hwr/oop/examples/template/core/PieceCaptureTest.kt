@@ -199,17 +199,15 @@ class PieceCaptureTest {
 	}
 
 	@Test
-	fun `Piece DefaultImpls canCapture delegates to interface default`() {
+	fun `canCapture works through Piece interface reference`() {
 		// given
 		val whiteRook: Piece = Rook(Color.WHITE, Square(File.A, 1))
 		val blackPawn: Piece = Pawn(Color.BLACK, Square(File.A, 5))
 		val whitePawn: Piece = Pawn(Color.WHITE, Square(File.A, 5))
-		val defaultImpls = Class.forName("hwr.oop.examples.template.core.Piece\$DefaultImpls")
-		val canCaptureMethod = defaultImpls.getDeclaredMethod("canCapture", Piece::class.java, Piece::class.java)
 
 		// when
-		val canCaptureEnemy = canCaptureMethod.invoke(null, whiteRook, blackPawn) as Boolean
-		val canCaptureFriend = canCaptureMethod.invoke(null, whiteRook, whitePawn) as Boolean
+		val canCaptureEnemy = whiteRook.canCapture(blackPawn)
+		val canCaptureFriend = whiteRook.canCapture(whitePawn)
 
 		// then
 		assertThat(canCaptureEnemy).isTrue()

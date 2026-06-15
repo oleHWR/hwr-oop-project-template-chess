@@ -361,6 +361,15 @@
         </dependencies>
         <configuration>
           <jvmTarget>${java.version}</jvmTarget>
+          <args>
+            <!--
+              Emit real JVM default methods for interfaces instead of synthetic
+              `DefaultImpls` bridge classes. Removes the bridge methods PIT
+              cannot reach via tests, and removes the matching JaCoCo blind
+              spot on the synthetic class.
+            -->
+            <arg>-Xjvm-default=all</arg>
+          </args>
           <compilerPlugins>
             <plugin>kotlinx-serialization</plugin>
           </compilerPlugins>
