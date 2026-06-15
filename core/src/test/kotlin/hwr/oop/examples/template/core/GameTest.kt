@@ -158,10 +158,10 @@ class GameTest {
 		val board = Board()
 		board.place(King(Color.WHITE, Square(File.E, 1)))
 		val game = Game(GameID("game-1"), board, Turn(2, Color.BLACK))
-		
+
 		// when
 		val text = game.showBoard()
-		
+
 		// then
 		assertThat(text).isEqualTo(
 			"Turn 2:\n\n" +
@@ -174,5 +174,121 @@ class GameTest {
 					"        \n" +
 					"    K   "
 		)
+	}
+
+	@Test
+	fun `makeMove applies the move to the board`() {
+		// given
+		val game = Game(GameID("game-1"))
+		val move = Move(Square(File.E, 2), Square(File.E, 4))
+
+		// when
+		val next = game.makeMove(move)
+
+		// then
+		assertThat(next.board.pieceAt(Square(File.E, 2))).isNull()
+		assertThat(next.board.pieceAt(Square(File.E, 4)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 4), hasMoved = true))
+	}
+
+	@Test
+	fun `makeMove switches player from white to black without bumping turn number`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val next = game.makeMove(Move(Square(File.E, 2), Square(File.E, 4)))
+
+		// then
+		assertThat(next.turn.color).isEqualTo(Color.BLACK)
+		assertThat(next.turn.number).isEqualTo(1)
+	}
+
+	@Test
+	fun `makeMove bumps turn number when black completes the turn`() {
+		// given
+		val game = Game(GameID("game-1"), turn = Turn(1, Color.BLACK))
+
+		// when
+		val next = game.makeMove(Move(Square(File.E, 7), Square(File.E, 5)))
+
+		// then
+		assertThat(next.turn.color).isEqualTo(Color.WHITE)
+		assertThat(next.turn.number).isEqualTo(2)
+	}
+
+	@Test
+	fun `makeMove preserves id and status`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val next = game.makeMove(Move(Square(File.E, 2), Square(File.E, 4)))
+
+		// then
+		assertThat(next.id).isSameAs(game.id)
+		assertThat(next.id.value).isEqualTo("game-1")
+		assertThat(next.status).isEqualTo(GameStatus.ONGOING)
+	}
+
+	@Test
+	fun `makeMove fails when move is not in availableMoves`() {
+		// given
+		val game = Game(GameID("game-1"))
+		val invalidMove = Move(Square(File.E, 2), Square(File.E, 5))
+
+		// when / then
+		assertThatThrownBy { game.makeMove(invalidMove) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Move is not available")
+	}
+
+	@Test
+	fun `makeMove fails when game is finished`() {
+		// given
+		val game = Game(
+			id = GameID("game-1"),
+			status = GameStatus.FINISHED,
+			result = GameResult(GameEndReason.RESIGNED, Color.BLACK)
+		)
+		val anyMove = Move(Square(File.E, 2), Square(File.E, 4))
+
+		// when / then
+		assertThatThrownBy { game.makeMove(anyMove) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Game is not in progress")
+	}
+
+	@Test
+	fun `makeMove leaves the board unchanged when the move is rejected`() {
+		// given
+		val game = Game(GameID("game-1"))
+		val invalidMove = Move(Square(File.E, 2), Square(File.E, 5))
+
+		// when / then
+		assertThatThrownBy { game.makeMove(invalidMove) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+		assertThat(game.board.pieceAt(Square(File.E, 2)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 2)))
+		assertThat(game.board.pieceAt(Square(File.E, 5))).isNull()
+		assertThat(game.turn.color).isEqualTo(Color.WHITE)
+	}
+
+	@Test
+	fun `makeMove can capture an opponent piece`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+		board.place(Pawn(Color.BLACK, Square(File.A, 5)))
+		val game = Game(GameID("game-1"), board)
+
+		// when
+		val next = game.makeMove(Move(Square(File.A, 1), Square(File.A, 5)))
+
+		// then
+		assertThat(next.board.pieces(Color.BLACK)).isEmpty()
+		assertThat(next.board.pieceAt(Square(File.A, 5)))
+			.isEqualTo(Rook(Color.WHITE, Square(File.A, 5), hasMoved = true))
+		assertThat(next.turn.color).isEqualTo(Color.BLACK)
 	}
 }

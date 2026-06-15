@@ -24,10 +24,36 @@ class TurnTest {
 	fun `turn fails when number is smaller than 1`() {
 		// given
 		val number = 0
-		
+
 		// when / then
 		assertThatThrownBy { Turn(number, Color.WHITE) }
 			.isInstanceOf(IllegalArgumentException::class.java)
 			.hasMessage("Turn number must be at least 1")
+	}
+
+	@Test
+	fun `next from white keeps number and switches to black`() {
+		// given
+		val turn = Turn(3, Color.WHITE)
+
+		// when
+		val next = turn.next()
+
+		// then
+		assertThat(next.number).isEqualTo(3)
+		assertThat(next.color).isEqualTo(Color.BLACK)
+	}
+
+	@Test
+	fun `next from black bumps number and switches to white`() {
+		// given
+		val turn = Turn(3, Color.BLACK)
+
+		// when
+		val next = turn.next()
+
+		// then
+		assertThat(next.number).isEqualTo(4)
+		assertThat(next.color).isEqualTo(Color.WHITE)
 	}
 }

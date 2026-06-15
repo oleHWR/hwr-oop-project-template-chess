@@ -26,6 +26,22 @@ class Game(
 		return board.pieces(turn.color).flatMap { MovementFactory.availableMoves(it, board) }
 	}
 
+	fun makeMove(move: Move): Game {
+		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+		require(move in availableMoves()) { "Move is not available" }
+
+		board.applyMove(move)
+		return Game(
+			id = id,
+			board = board,
+			turn = turn.next(),
+			status = status,
+			positionStatus = positionStatus,
+			result = result,
+			pendingDrawOfferBy = pendingDrawOfferBy,
+		)
+	}
+
 	fun showBoard(): String {
 		return "Turn ${turn.number}:\n\n${board.showBoard()}"
 	}
