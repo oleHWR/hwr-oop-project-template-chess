@@ -37,10 +37,10 @@ class GameTest {
 	fun `new game has white turn and ongoing status by default`() {
 		// given
 		val gameID = GameID("game-1")
-		
+
 		// when
 		val game = Game(gameID)
-		
+
 		// then
 		assertThat(game.turn.number).isEqualTo(1)
 		assertThat(game.turn.color).isEqualTo(Color.WHITE)
@@ -48,6 +48,34 @@ class GameTest {
 		assertThat(game.positionStatus).isEqualTo(PositionStatus.NORMAL)
 		assertThat(game.result).isNull()
 		assertThat(game.pendingDrawOfferBy).isNull()
+	}
+
+	@Test
+	fun `new game has standard chess starting position by default`() {
+		// given / when
+		val game = Game(GameID("game-1"))
+
+		// then
+		assertThat(game.board.pieces(Color.WHITE)).hasSize(16)
+		assertThat(game.board.pieces(Color.BLACK)).hasSize(16)
+		assertThat(game.board.pieceAt(Square(File.E, 1)))
+			.isEqualTo(King(Color.WHITE, Square(File.E, 1)))
+		assertThat(game.board.pieceAt(Square(File.E, 8)))
+			.isEqualTo(King(Color.BLACK, Square(File.E, 8)))
+		assertThat(game.board.pieceAt(Square(File.A, 2)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.A, 2)))
+	}
+
+	@Test
+	fun `new game gives white twenty opening moves`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val moves = game.availableMoves()
+
+		// then
+		assertThat(moves).hasSize(20)
 	}
 
 	@Test

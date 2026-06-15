@@ -2,7 +2,7 @@ package hwr.oop.examples.template.core
 
 class Game(
 	val id: GameID,
-	val board: Board = Board(),
+	val board: Board = Board.standardSetup(),
 	val turn: Turn = Turn(1, Color.WHITE),
 	val status: GameStatus = GameStatus.ONGOING,
 	val positionStatus: PositionStatus = PositionStatus.NORMAL,
