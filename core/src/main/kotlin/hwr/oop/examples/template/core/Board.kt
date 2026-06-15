@@ -4,6 +4,33 @@ private const val MIN_RANK = 1
 private const val MAX_RANK = 8
 
 class Board {
+	companion object {
+		fun standardSetup(): Board {
+			val board = Board()
+
+			for (file in File.entries) {
+				board.place(Pawn(Color.WHITE, Square(file, 2)))
+				board.place(Pawn(Color.BLACK, Square(file, 7)))
+			}
+
+			placeBackRank(board, Color.WHITE, rank = 1)
+			placeBackRank(board, Color.BLACK, rank = 8)
+
+			return board
+		}
+
+		private fun placeBackRank(board: Board, color: Color, rank: Int) {
+			board.place(Rook(color, Square(File.A, rank)))
+			board.place(Knight(color, Square(File.B, rank)))
+			board.place(Bishop(color, Square(File.C, rank)))
+			board.place(Queen(color, Square(File.D, rank)))
+			board.place(King(color, Square(File.E, rank)))
+			board.place(Bishop(color, Square(File.F, rank)))
+			board.place(Knight(color, Square(File.G, rank)))
+			board.place(Rook(color, Square(File.H, rank)))
+		}
+	}
+
 	private val squares: Map<Pair<File, Int>, Square> =
 		buildMap {
 			for (file in File.entries) {
