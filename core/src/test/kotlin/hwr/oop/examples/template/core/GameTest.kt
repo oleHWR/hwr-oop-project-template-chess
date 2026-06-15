@@ -390,4 +390,63 @@ class GameTest {
 		}.isInstanceOf(IllegalArgumentException::class.java)
 			.hasMessage("Move is not available")
 	}
+
+	@Test
+	fun `makeMove finishes the game with checkmate when the next player has no legal moves and is in check`() {
+		// given — back-rank mate. Black king on H8 hemmed in by its own pawns
+		// on F7 G7 H7 (no luft). White rook on D1 will deliver mate by sliding
+		// to D8: rank 8 is attacked, the king has no escape squares.
+		val board = Board()
+		board.place(King(Color.BLACK, Square(File.H, 8)))
+		board.place(Pawn(Color.BLACK, Square(File.F, 7)))
+		board.place(Pawn(Color.BLACK, Square(File.G, 7)))
+		board.place(Pawn(Color.BLACK, Square(File.H, 7)))
+		board.place(Rook(Color.WHITE, Square(File.D, 1)))
+		board.place(King(Color.WHITE, Square(File.A, 1)))
+		val game = Game(GameID("game-1"), board, Turn(1, Color.WHITE))
+
+		// when
+		val next = game.makeMove(Move(Square(File.D, 1), Square(File.D, 8)))
+
+		// then
+		assertThat(next.status).isEqualTo(GameStatus.FINISHED)
+		assertThat(next.positionStatus).isEqualTo(PositionStatus.CHECK)
+		assertThat(next.result).isEqualTo(GameResult(GameEndReason.CHECKMATE, Color.WHITE))
+		assertThat(next.availableMoves()).isEmpty()
+	}
+
+	@Test
+	fun `makeMove finishes the game with stalemate when the next player has no legal moves and is not in check`() {
+		// given — classic queen-and-king stalemate. Black king on H8, white king
+		// on F7, white queen on G3. White plays Qg3-g6, leaving black with no
+		// legal move (G7, G8, H7 are all attacked) yet not in check.
+		val board = Board()
+		board.place(King(Color.BLACK, Square(File.H, 8)))
+		board.place(King(Color.WHITE, Square(File.F, 7)))
+		board.place(Queen(Color.WHITE, Square(File.G, 3)))
+		val game = Game(GameID("game-1"), board, Turn(1, Color.WHITE))
+
+		// when
+		val next = game.makeMove(Move(Square(File.G, 3), Square(File.G, 6)))
+
+		// then
+		assertThat(next.status).isEqualTo(GameStatus.FINISHED)
+		assertThat(next.positionStatus).isEqualTo(PositionStatus.NORMAL)
+		assertThat(next.result).isEqualTo(GameResult(GameEndReason.STALEMATE))
+		assertThat(next.result?.winner).isNull()
+		assertThat(next.availableMoves()).isEmpty()
+	}
+
+	@Test
+	fun `makeMove keeps the game ongoing when the next player still has legal moves`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val next = game.makeMove(Move(Square(File.E, 2), Square(File.E, 4)))
+
+		// then
+		assertThat(next.status).isEqualTo(GameStatus.ONGOING)
+		assertThat(next.result).isNull()
+	}
 }

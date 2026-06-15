@@ -41,14 +41,31 @@ class Game(
 			else -> PositionStatus.NORMAL
 		}
 
+		val ongoing = Game(
+			id = id,
+			board = board,
+			turn = nextTurn,
+			status = GameStatus.ONGOING,
+			positionStatus = nextPositionStatus,
+			pendingDrawOfferBy = pendingDrawOfferBy,
+		)
+
+		if (ongoing.availableMoves().isNotEmpty()) return ongoing
+
+		val endReason = if (nextPositionStatus == PositionStatus.CHECK) {
+			GameEndReason.CHECKMATE
+		} else {
+			GameEndReason.STALEMATE
+		}
+		val winner = if (endReason == GameEndReason.CHECKMATE) turn.color else null
+
 		return Game(
 			id = id,
 			board = board,
 			turn = nextTurn,
-			status = status,
+			status = GameStatus.FINISHED,
 			positionStatus = nextPositionStatus,
-			result = result,
-			pendingDrawOfferBy = pendingDrawOfferBy,
+			result = GameResult(endReason, winner),
 		)
 	}
 
