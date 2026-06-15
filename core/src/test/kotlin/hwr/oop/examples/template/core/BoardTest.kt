@@ -326,4 +326,113 @@ class BoardTest {
 		assertThat(result).isFalse()
 	}
 
+	@Test
+	fun `kingSquare returns the square holding the king of the given color`() {
+		// given
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		board.place(King(Color.BLACK, Square(File.E, 8)))
+
+		// when / then
+		assertThat(board.kingSquare(Color.WHITE)).isEqualTo(Square(File.E, 1))
+		assertThat(board.kingSquare(Color.BLACK)).isEqualTo(Square(File.E, 8))
+	}
+
+	@Test
+	fun `kingSquare returns null when there is no king of that color`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+
+		// when / then
+		assertThat(board.kingSquare(Color.WHITE)).isNull()
+		assertThat(board.kingSquare(Color.BLACK)).isNull()
+	}
+
+	@Test
+	fun `isAttackedBy is true when an enemy rook sees the square along a clear file`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.BLACK, Square(File.E, 8)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.E, 1), Color.BLACK)).isTrue()
+	}
+
+	@Test
+	fun `isAttackedBy is false when the line is blocked by another piece`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.BLACK, Square(File.E, 8)))
+		board.place(Pawn(Color.WHITE, Square(File.E, 4)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.E, 1), Color.BLACK)).isFalse()
+	}
+
+	@Test
+	fun `isAttackedBy is true for a pawn diagonal even though forward move is not a capture`() {
+		// given
+		val board = Board()
+		board.place(Pawn(Color.BLACK, Square(File.D, 5)))
+
+		// when / then — black pawn captures down-left to C4, down-right to E4
+		assertThat(board.isAttackedBy(Square(File.C, 4), Color.BLACK)).isTrue()
+		assertThat(board.isAttackedBy(Square(File.E, 4), Color.BLACK)).isTrue()
+		assertThat(board.isAttackedBy(Square(File.D, 4), Color.BLACK)).isFalse()
+	}
+
+	@Test
+	fun `isAttackedBy is true for an empty square that an enemy piece could land on`() {
+		// given — empty target square, attacker has a clear line
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.A, 5), Color.WHITE)).isTrue()
+	}
+
+	@Test
+	fun `isAttackedBy is false when no piece of that color exists`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.A, 5), Color.BLACK)).isFalse()
+	}
+
+	@Test
+	fun `copy returns a board with the same pieces`() {
+		// given
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		board.place(Rook(Color.BLACK, Square(File.A, 8)))
+
+		// when
+		val copy = board.copy()
+
+		// then
+		assertThat(copy.pieceAt(Square(File.E, 1)))
+			.isEqualTo(King(Color.WHITE, Square(File.E, 1)))
+		assertThat(copy.pieceAt(Square(File.A, 8)))
+			.isEqualTo(Rook(Color.BLACK, Square(File.A, 8)))
+	}
+
+	@Test
+	fun `copy is independent of the original board`() {
+		// given
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		val copy = board.copy()
+
+		// when — mutating the copy does not affect the original
+		copy.applyMove(Move(Square(File.E, 1), Square(File.E, 2)))
+
+		// then
+		assertThat(board.pieceAt(Square(File.E, 1)))
+			.isEqualTo(King(Color.WHITE, Square(File.E, 1)))
+		assertThat(board.pieceAt(Square(File.E, 2))).isNull()
+	}
+
 }

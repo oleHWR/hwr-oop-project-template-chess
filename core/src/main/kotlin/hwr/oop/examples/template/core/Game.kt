@@ -23,7 +23,9 @@ class Game(
 	fun availableMoves(): List<Move> {
 		if (status == GameStatus.FINISHED) return emptyList()
 
-		return board.pieces(turn.color).flatMap { MovementFactory.availableMoves(it, board) }
+		return board.pieces(turn.color)
+			.flatMap { MovementFactory.availableMoves(it, board) }
+			.filter { !leavesOwnKingInCheck(it) }
 	}
 
 	fun makeMove(move: Move): Game {
@@ -31,15 +33,30 @@ class Game(
 		require(move in availableMoves()) { "Move is not available" }
 
 		board.applyMove(move)
+		val nextTurn = turn.next()
+		val nextKingSquare = board.kingSquare(nextTurn.color)
+		val nextPositionStatus = when {
+			nextKingSquare == null -> PositionStatus.NORMAL
+			board.isAttackedBy(nextKingSquare, turn.color) -> PositionStatus.CHECK
+			else -> PositionStatus.NORMAL
+		}
+
 		return Game(
 			id = id,
 			board = board,
-			turn = turn.next(),
+			turn = nextTurn,
 			status = status,
-			positionStatus = positionStatus,
+			positionStatus = nextPositionStatus,
 			result = result,
 			pendingDrawOfferBy = pendingDrawOfferBy,
 		)
+	}
+
+	private fun leavesOwnKingInCheck(move: Move): Boolean {
+		val probe = board.copy()
+		probe.applyMove(move)
+		val ownKing = probe.kingSquare(turn.color) ?: return false
+		return probe.isAttackedBy(ownKing, turn.color.opposite())
 	}
 
 	fun showBoard(): String {

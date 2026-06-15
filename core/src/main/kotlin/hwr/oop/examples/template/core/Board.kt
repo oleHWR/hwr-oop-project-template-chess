@@ -92,7 +92,39 @@ class Board {
 	fun pieces(color: Color): List<Piece> {
 		return pieces.values.filter { it.color == color }
 	}
-	
+
+	fun kingSquare(color: Color): Square? {
+		return pieces.values
+			.firstOrNull { it.type == PieceType.KING && it.color == color }
+			?.position
+	}
+
+	// Considers any piece of [byColor] that could capture on [square], whether
+	// the square is empty or already holds a piece. For empty squares a phantom
+	// enemy is placed on a copy so capture-only movements (e.g. pawn diagonals)
+	// are correctly recognised as attacks.
+	fun isAttackedBy(square: Square, byColor: Color): Boolean {
+		val probe = if (pieceAt(square) == null) {
+			val temp = copy()
+			temp.place(Pawn(byColor.opposite(), square))
+			temp
+		} else {
+			this
+		}
+
+		return probe.pieces(byColor).any { attacker ->
+			Move(attacker.position, square) in MovementFactory.availableMoves(attacker, probe)
+		}
+	}
+
+	fun copy(): Board {
+		val copy = Board()
+		for (piece in pieces.values) {
+			copy.place(piece)
+		}
+		return copy
+	}
+
 	fun validCapture(attacker: Square, target: Square): Boolean {
 		val attackingPiece = pieceAt(attacker) ?: return false
 		if (pieceAt(target) == null) return false
