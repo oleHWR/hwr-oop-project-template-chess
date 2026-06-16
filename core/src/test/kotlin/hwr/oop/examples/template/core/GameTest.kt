@@ -449,4 +449,120 @@ class GameTest {
 		assertThat(next.status).isEqualTo(GameStatus.ONGOING)
 		assertThat(next.result).isNull()
 	}
+
+	@Test
+	fun `offerDraw stores the offering player in pendingDrawOfferBy`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val withOffer = game.offerDraw(Color.WHITE)
+
+		// then
+		assertThat(withOffer.pendingDrawOfferBy).isEqualTo(Color.WHITE)
+		assertThat(withOffer.status).isEqualTo(GameStatus.ONGOING)
+		assertThat(withOffer.result).isNull()
+	}
+
+	@Test
+	fun `offerDraw fails when only the side to move may offer`() {
+		// given — white to move
+		val game = Game(GameID("game-1"))
+
+		// when / then — black cannot offer a draw out of turn
+		assertThatThrownBy { game.offerDraw(Color.BLACK) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Only the side to move may offer a draw")
+	}
+
+	@Test
+	fun `offerDraw fails when an offer is already pending`() {
+		// given
+		val game = Game(GameID("game-1")).offerDraw(Color.WHITE)
+
+		// when / then
+		assertThatThrownBy { game.offerDraw(Color.WHITE) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("A draw offer is already pending")
+	}
+
+	@Test
+	fun `offerDraw fails when the game is finished`() {
+		// given
+		val game = Game(
+			id = GameID("game-1"),
+			status = GameStatus.FINISHED,
+			result = GameResult(GameEndReason.RESIGNED, Color.BLACK)
+		)
+
+		// when / then
+		assertThatThrownBy { game.offerDraw(Color.WHITE) }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("Game is not in progress")
+	}
+
+	@Test
+	fun `declineDraw removes the pending offer`() {
+		// given
+		val game = Game(GameID("game-1")).offerDraw(Color.WHITE)
+
+		// when
+		val declined = game.declineDraw()
+
+		// then
+		assertThat(declined.pendingDrawOfferBy).isNull()
+		assertThat(declined.status).isEqualTo(GameStatus.ONGOING)
+		assertThat(declined.result).isNull()
+	}
+
+	@Test
+	fun `declineDraw fails when there is no pending offer`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when / then
+		assertThatThrownBy { game.declineDraw() }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("No draw offer to respond to")
+	}
+
+	@Test
+	fun `acceptDraw finishes the game with DRAW_ACCEPTED and no winner`() {
+		// given
+		val game = Game(GameID("game-1")).offerDraw(Color.WHITE)
+
+		// when
+		val accepted = game.acceptDraw()
+
+		// then
+		assertThat(accepted.status).isEqualTo(GameStatus.FINISHED)
+		assertThat(accepted.result).isEqualTo(GameResult(GameEndReason.DRAW_ACCEPTED))
+		assertThat(accepted.result?.winner).isNull()
+		assertThat(accepted.pendingDrawOfferBy).isNull()
+	}
+
+	@Test
+	fun `acceptDraw fails when there is no pending offer`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when / then
+		assertThatThrownBy { game.acceptDraw() }
+			.isInstanceOf(IllegalArgumentException::class.java)
+			.hasMessage("No draw offer to respond to")
+	}
+
+	@Test
+	fun `accepted draw leaves the board untouched`() {
+		// given
+		val game = Game(GameID("game-1")).offerDraw(Color.WHITE)
+
+		// when
+		val accepted = game.acceptDraw()
+
+		// then — same starting setup, no piece movement happened
+		assertThat(accepted.board).isSameAs(game.board)
+		assertThat(accepted.board.pieceAt(Square(File.E, 2)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 2)))
+	}
 }

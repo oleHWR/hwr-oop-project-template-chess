@@ -76,6 +76,50 @@ class Game(
 		return probe.isAttackedBy(ownKing, turn.color.opposite())
 	}
 
+	fun offerDraw(by: Color): Game {
+		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+		require(pendingDrawOfferBy == null) { "A draw offer is already pending" }
+		require(by == turn.color) { "Only the side to move may offer a draw" }
+
+		return Game(
+			id = id,
+			board = board,
+			turn = turn,
+			status = status,
+			positionStatus = positionStatus,
+			result = result,
+			pendingDrawOfferBy = by,
+		)
+	}
+
+	fun declineDraw(): Game {
+		require(pendingDrawOfferBy != null) { "No draw offer to respond to" }
+
+		return Game(
+			id = id,
+			board = board,
+			turn = turn,
+			status = status,
+			positionStatus = positionStatus,
+			result = result,
+			pendingDrawOfferBy = null,
+		)
+	}
+
+	fun acceptDraw(): Game {
+		require(pendingDrawOfferBy != null) { "No draw offer to respond to" }
+
+		return Game(
+			id = id,
+			board = board,
+			turn = turn,
+			status = GameStatus.FINISHED,
+			positionStatus = positionStatus,
+			result = GameResult(GameEndReason.DRAW_ACCEPTED),
+			pendingDrawOfferBy = null,
+		)
+	}
+
 	fun showBoard(): String {
 		return "Turn ${turn.number}:\n\n${board.showBoard()}"
 	}
