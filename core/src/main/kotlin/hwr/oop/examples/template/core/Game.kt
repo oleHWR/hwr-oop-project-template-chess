@@ -120,6 +120,20 @@ class Game(
 		)
 	}
 
+	fun resign(by: Color): Game {
+		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+
+		return Game(
+			id = id,
+			board = board,
+			turn = turn,
+			status = GameStatus.FINISHED,
+			positionStatus = positionStatus,
+			result = GameResult(GameEndReason.RESIGNED, by.opposite()),
+			pendingDrawOfferBy = null,
+		)
+	}
+
 	fun showBoard(): String {
 		return "Turn ${turn.number}:\n\n${board.showBoard()}"
 	}
