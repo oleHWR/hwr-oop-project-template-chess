@@ -7,13 +7,25 @@ enum class MovementUsage {
 }
 
 data class MovementDirection(
-	val direction: Direction,
-	val maxRange: Int = 7,
-	val canJump: Boolean = false,
-	val usage: MovementUsage = MovementUsage.MOVE_AND_CAPTURE,
+	val fileDelta: Int,
+	val rankDelta: Int,
+	val maxRange: Int,
+	val canJump: Boolean,
+	val usage: MovementUsage,
 ) {
-	val fileDelta = direction.fileDelta
-	val rankDelta = direction.rankDelta
+	constructor(
+		direction: Direction,
+		maxRange: Int = 7,
+		canJump: Boolean = false,
+		usage: MovementUsage = MovementUsage.MOVE_AND_CAPTURE,
+	) : this(direction.fileDelta, direction.rankDelta, maxRange, canJump, usage)
+
+	constructor(
+		deltas: Pair<Int, Int>,
+		maxRange: Int = 7,
+		canJump: Boolean = false,
+		usage: MovementUsage = MovementUsage.MOVE_AND_CAPTURE,
+	) : this(deltas.first, deltas.second, maxRange, canJump, usage)
 
 	fun reaches(fileDistance: Int, rankDistance: Int): Boolean {
 		for (steps in 1..maxRange) {

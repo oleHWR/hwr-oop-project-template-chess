@@ -11,13 +11,8 @@ enum class Direction(
 	UP_RIGHT(1, 1),
 	UP_LEFT(-1, 1),
 	DOWN_RIGHT(1, -1),
-	DOWN_LEFT(-1, -1),
-	UP_UP_RIGHT(1, 2),
-	UP_UP_LEFT(-1, 2),
-	DOWN_DOWN_RIGHT(1, -2),
-	DOWN_DOWN_LEFT(-1, -2),
-	RIGHT_RIGHT_UP(2, 1),
-	RIGHT_RIGHT_DOWN(2, -1),
-	LEFT_LEFT_UP(-2, 1),
-	LEFT_LEFT_DOWN(-2, -1),
+	DOWN_LEFT(-1, -1);
+
+	operator fun plus(other: Direction): Pair<Int, Int> =
+		(fileDelta + other.fileDelta) to (rankDelta + other.rankDelta)
 }

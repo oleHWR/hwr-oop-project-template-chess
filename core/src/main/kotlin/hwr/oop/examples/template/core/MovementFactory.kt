@@ -27,14 +27,14 @@ object MovementFactory {
 	)
 
 	private val knightDirections = listOf(
-		MovementDirection(Direction.UP_UP_RIGHT, maxRange = 1, canJump = true),
-		MovementDirection(Direction.UP_UP_LEFT, maxRange = 1, canJump = true),
-		MovementDirection(Direction.DOWN_DOWN_RIGHT, maxRange = 1, canJump = true),
-		MovementDirection(Direction.DOWN_DOWN_LEFT, maxRange = 1, canJump = true),
-		MovementDirection(Direction.RIGHT_RIGHT_UP, maxRange = 1, canJump = true),
-		MovementDirection(Direction.RIGHT_RIGHT_DOWN, maxRange = 1, canJump = true),
-		MovementDirection(Direction.LEFT_LEFT_UP, maxRange = 1, canJump = true),
-		MovementDirection(Direction.LEFT_LEFT_DOWN, maxRange = 1, canJump = true)
+		MovementDirection(Direction.UP + Direction.UP_RIGHT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.UP + Direction.UP_LEFT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.DOWN + Direction.DOWN_RIGHT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.DOWN + Direction.DOWN_LEFT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.RIGHT + Direction.UP_RIGHT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.RIGHT + Direction.DOWN_RIGHT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.LEFT + Direction.UP_LEFT, maxRange = 1, canJump = true),
+		MovementDirection(Direction.LEFT + Direction.DOWN_LEFT, maxRange = 1, canJump = true)
 	)
 
 	fun directionsFor(piece: Piece): List<MovementDirection> {
