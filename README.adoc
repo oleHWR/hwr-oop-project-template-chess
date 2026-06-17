@@ -10,6 +10,7 @@ Do not rely on it!
 * [x] Implemented board and pieces
 * [x] Implemented ability to move pieces
 * [x] Implemented ability to capture pieces
+* [x] Implemented turn advancement & game states
 * [ ] WIP Complexer Chess rules
 * [ ] WIP turn history and persistance
 
