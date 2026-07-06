@@ -393,6 +393,17 @@ class BoardTest {
 	}
 
 	@Test
+	fun `isAttackedBy works when the target square is occupied`() {
+		// given
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		board.place(Rook(Color.BLACK, Square(File.E, 8)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.E, 1), Color.BLACK)).isTrue()
+	}
+
+	@Test
 	fun `isAttackedBy is false when no piece of that color exists`() {
 		// given
 		val board = Board()

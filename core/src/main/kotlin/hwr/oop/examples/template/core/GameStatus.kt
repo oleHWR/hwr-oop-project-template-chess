@@ -1,5 +1,7 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
 enum class GameStatus {
 	ONGOING,
 	FINISHED,
@@ -17,6 +19,7 @@ enum class GameEndReason {
 	RESIGNED,
 }
 
+@Serializable
 data class GameResult(
 	val reason: GameEndReason,
 	val winner: Color? = null,

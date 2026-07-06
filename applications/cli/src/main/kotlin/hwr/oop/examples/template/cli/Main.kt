@@ -9,6 +9,7 @@ import hwr.oop.examples.template.SqlPersistence
 import hwr.oop.examples.template.config.AppConfig
 import hwr.oop.examples.template.config.ConfigLoader
 import hwr.oop.examples.template.config.PersistenceType
+import hwr.oop.examples.template.ports.out.GameRepository
 import okio.Path.Companion.toPath
 
 class ExampleBaseCommand : CliktCommand(name = "example") {
@@ -18,23 +19,27 @@ class ExampleBaseCommand : CliktCommand(name = "example") {
 fun main(args: Array<String>) {
 	val appConfig = ConfigLoader.load()
 	val persistence = buildPersistence(appConfig)
-	ExampleBaseCommand()
-		.subcommands(
-			StartGameCommand(),
-			OnGameIdCommand().subcommands(
-				GetGameCommand(),
-				GetAvailableMovesCommand(),
-				MakeMoveCommand(),
-				ResignCommand(),
-				OfferDrawCommand(),
-				AcceptDrawCommand(),
-				DeclineDrawCommand(),
-			),
-		)
-		.main(args)
+
+	buildCli(persistence).main(args)
 }
 
-private fun buildPersistence(appConfig: AppConfig): Any {
+fun buildCli(persistence: GameRepository): CliktCommand {
+	return ExampleBaseCommand()
+		.subcommands(
+			StartGameCommand(persistence),
+			OnGameIdCommand().subcommands(
+				GetGameCommand(persistence),
+				GetAvailableMovesCommand(persistence),
+				MakeMoveCommand(persistence),
+				ResignCommand(persistence),
+				OfferDrawCommand(persistence),
+				AcceptDrawCommand(persistence),
+				DeclineDrawCommand(persistence),
+			),
+		)
+}
+
+private fun buildPersistence(appConfig: AppConfig): GameRepository {
 	return when (appConfig.persistence) {
 		PersistenceType.SQL -> SqlPersistence(
 			appConfig.sql.jdbcUrl,

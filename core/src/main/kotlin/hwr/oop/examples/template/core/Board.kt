@@ -1,8 +1,15 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
 private const val MIN_RANK = 1
 private const val MAX_RANK = 8
 
+@Serializable(with = BoardSerializer::class)
 class Board {
 	companion object {
 		fun standardSetup(): Board {
@@ -93,6 +100,10 @@ class Board {
 		return pieces.values.filter { it.color == color }
 	}
 
+	fun pieces(): List<Piece> {
+		return pieces.values.toList()
+	}
+
 	fun kingSquare(color: Color): Square? {
 		return pieces.values
 			.firstOrNull { it.type == PieceType.KING && it.color == color }
@@ -132,4 +143,59 @@ class Board {
 		return Move(attacker, target) in MovementFactory.availableMoves(attackingPiece, this)
 	}
 	
+}
+
+object BoardSerializer : KSerializer<Board> {
+	override val descriptor: SerialDescriptor = BoardSurrogate.serializer().descriptor
+
+	override fun serialize(encoder: Encoder, value: Board) {
+		val surrogate = BoardSurrogate(
+			pieces = value.pieces().map { PieceSnapshot.from(it) }
+		)
+		encoder.encodeSerializableValue(BoardSurrogate.serializer(), surrogate)
+	}
+
+	override fun deserialize(decoder: Decoder): Board {
+		val surrogate = decoder.decodeSerializableValue(BoardSurrogate.serializer())
+		val board = Board()
+		for (piece in surrogate.pieces) {
+			board.place(piece.toPiece())
+		}
+		return board
+	}
+}
+
+@Serializable
+private data class BoardSurrogate(
+	val pieces: List<PieceSnapshot>,
+)
+
+@Serializable
+private data class PieceSnapshot(
+	val type: PieceType,
+	val color: Color,
+	val position: Square,
+	val hasMoved: Boolean,
+) {
+	companion object {
+		fun from(piece: Piece): PieceSnapshot {
+			return PieceSnapshot(
+				type = piece.type,
+				color = piece.color,
+				position = piece.position,
+				hasMoved = piece.hasMoved,
+			)
+		}
+	}
+
+	fun toPiece(): Piece {
+		return when (type) {
+			PieceType.PAWN -> Pawn(color, position, hasMoved)
+			PieceType.ROOK -> Rook(color, position, hasMoved)
+			PieceType.BISHOP -> Bishop(color, position, hasMoved)
+			PieceType.KNIGHT -> Knight(color, position, hasMoved)
+			PieceType.KING -> King(color, position, hasMoved)
+			PieceType.QUEEN -> Queen(color, position, hasMoved)
+		}
+	}
 }

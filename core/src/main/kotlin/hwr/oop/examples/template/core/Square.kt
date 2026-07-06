@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Square(val file: File, val rank: Int) {
 	init {
 		require(rank in 1..8)

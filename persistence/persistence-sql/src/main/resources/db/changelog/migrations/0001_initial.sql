@@ -1,9 +1,8 @@
 --liquibase formatted sql
 
--- --changeset system:1 dbms:postgresql
--- CREATE TABLE trains
--- (
--- 	 id       TEXT PRIMARY KEY,
--- 	 name     TEXT NOT NULL,
---   maxSpeed INT NOT NULL
--- );
+--changeset system:1 dbms:postgresql
+CREATE TABLE chess_games
+(
+	id   TEXT PRIMARY KEY,
+	game JSONB NOT NULL
+);

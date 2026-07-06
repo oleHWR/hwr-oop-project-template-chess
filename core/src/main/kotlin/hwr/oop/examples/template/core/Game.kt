@@ -1,5 +1,8 @@
 package hwr.oop.examples.template.core
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Game(
 	val id: GameID,
 	val board: Board = Board.standardSetup(),
@@ -8,8 +11,14 @@ class Game(
 	val positionStatus: PositionStatus = PositionStatus.NORMAL,
 	val result: GameResult? = null,
 	val pendingDrawOfferBy: Color? = null,
+	val whitePlayerId: String = "WHITE",
+	val blackPlayerId: String = "BLACK",
 ) {
 	init {
+		require(whitePlayerId.isNotBlank()) { "White player ID must not be blank" }
+		require(blackPlayerId.isNotBlank()) { "Black player ID must not be blank" }
+		require(whitePlayerId != blackPlayerId) { "Players must be different" }
+
 		if (status == GameStatus.ONGOING) {
 			require(result == null) { "An ongoing game cannot have a result" }
 		}
@@ -48,6 +57,8 @@ class Game(
 			status = GameStatus.ONGOING,
 			positionStatus = nextPositionStatus,
 			pendingDrawOfferBy = pendingDrawOfferBy,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 
 		if (ongoing.availableMoves().isNotEmpty()) return ongoing
@@ -66,6 +77,8 @@ class Game(
 			status = GameStatus.FINISHED,
 			positionStatus = nextPositionStatus,
 			result = GameResult(endReason, winner),
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 	}
 
@@ -89,6 +102,8 @@ class Game(
 			positionStatus = positionStatus,
 			result = result,
 			pendingDrawOfferBy = by,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 	}
 
@@ -103,6 +118,8 @@ class Game(
 			positionStatus = positionStatus,
 			result = result,
 			pendingDrawOfferBy = null,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 	}
 
@@ -117,6 +134,8 @@ class Game(
 			positionStatus = positionStatus,
 			result = GameResult(GameEndReason.DRAW_ACCEPTED),
 			pendingDrawOfferBy = null,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 	}
 
@@ -131,6 +150,8 @@ class Game(
 			positionStatus = positionStatus,
 			result = GameResult(GameEndReason.RESIGNED, by.opposite()),
 			pendingDrawOfferBy = null,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
 		)
 	}
 
