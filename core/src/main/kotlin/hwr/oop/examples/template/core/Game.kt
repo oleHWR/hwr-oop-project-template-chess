@@ -16,6 +16,7 @@ class Game(
 	val blackPlayerId: String = "BLACK",
 	val halfmoveClock: Int = 0,
 	val enPassantTarget: Square? = null,
+	val moveHistory: List<Move> = emptyList(),
 	@Transient val previous: Game? = null,
 ) {
 	init {
@@ -132,8 +133,9 @@ class Game(
 			board.isAttackedBy(nextKingSquare, turn.color) -> PositionStatus.CHECK
 			else -> PositionStatus.NORMAL
 		}
+		val nextHistory = moveHistory + move
 
-		val ongoing = Game(
+		val probe = Game(
 			id = id,
 			board = board,
 			turn = nextTurn,
@@ -144,49 +146,56 @@ class Game(
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = nextHalfmoveClock,
 			enPassantTarget = nextEnPassantTarget,
+			moveHistory = nextHistory,
 			previous = snapshot,
 		)
 
-		if (ongoing.availableMoves().isEmpty()) {
-			val endReason = if (nextPositionStatus == PositionStatus.CHECK) {
-				GameEndReason.CHECKMATE
+		val endResult = resolveEndResult(probe, turn.color, nextPositionStatus)
+		return probe.copy(
+			status = if (endResult == null) GameStatus.ONGOING else GameStatus.FINISHED,
+			result = endResult,
+			pendingDrawOfferBy = if (endResult == null) pendingDrawOfferBy else null,
+		)
+	}
+
+	private fun resolveEndResult(
+		probe: Game,
+		mover: Color,
+		nextPositionStatus: PositionStatus,
+	): GameResult? {
+		if (probe.availableMoves().isEmpty()) {
+			return if (nextPositionStatus == PositionStatus.CHECK) {
+				GameResult(GameEndReason.CHECKMATE, mover)
 			} else {
-				GameEndReason.STALEMATE
+				GameResult(GameEndReason.STALEMATE)
 			}
-			val winner = if (endReason == GameEndReason.CHECKMATE) turn.color else null
-
-			return Game(
-				id = id,
-				board = board,
-				turn = nextTurn,
-				status = GameStatus.FINISHED,
-				positionStatus = nextPositionStatus,
-				result = GameResult(endReason, winner),
-				whitePlayerId = whitePlayerId,
-				blackPlayerId = blackPlayerId,
-				halfmoveClock = nextHalfmoveClock,
-				enPassantTarget = nextEnPassantTarget,
-				previous = snapshot,
-			)
 		}
+		if (probe.halfmoveClock >= 100) return GameResult(GameEndReason.FIFTY_MOVE_RULE)
+		if (probe.hasInsufficientMaterial()) return GameResult(GameEndReason.INSUFFICIENT_MATERIAL)
+		if (probe.isThreefoldRepetition()) return GameResult(GameEndReason.THREEFOLD_REPETITION)
+		return null
+	}
 
-		if (nextHalfmoveClock >= 100) {
-			return Game(
-				id = id,
-				board = board,
-				turn = nextTurn,
-				status = GameStatus.FINISHED,
-				positionStatus = nextPositionStatus,
-				result = GameResult(GameEndReason.FIFTY_MOVE_RULE),
-				whitePlayerId = whitePlayerId,
-				blackPlayerId = blackPlayerId,
-				halfmoveClock = nextHalfmoveClock,
-				enPassantTarget = nextEnPassantTarget,
-				previous = snapshot,
-			)
-		}
-
-		return ongoing
+	private fun copy(
+		status: GameStatus = this.status,
+		result: GameResult? = this.result,
+		pendingDrawOfferBy: Color?,
+	): Game {
+		return Game(
+			id = id,
+			board = board,
+			turn = turn,
+			status = status,
+			positionStatus = positionStatus,
+			result = result,
+			pendingDrawOfferBy = pendingDrawOfferBy,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
+			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
+			moveHistory = moveHistory,
+			previous = previous,
+		)
 	}
 
 	fun undo(): Game {
@@ -206,6 +215,7 @@ class Game(
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = halfmoveClock,
 			enPassantTarget = enPassantTarget,
+			moveHistory = moveHistory,
 			previous = previous,
 		)
 	}
@@ -225,21 +235,20 @@ class Game(
 			}
 			target.applyMove(Move(rookFrom, rookTo))
 		}
-		if (move.promotion != null) {
+		val promotion = move.promotion
+		if (promotion != null) {
 			val piece = target.pieceAt(move.to) ?: return
 			target.remove(move.to)
-			target.place(promotedPiece(move.promotion, piece.color, move.to))
+			target.place(promotedPiece(promotion, piece.color, move.to))
 		}
 	}
 
 	private fun promotedPiece(type: PieceType, color: Color, square: Square): Piece {
 		return when (type) {
-			PieceType.QUEEN -> Queen(color, square, hasMoved = true)
 			PieceType.ROOK -> Rook(color, square, hasMoved = true)
 			PieceType.BISHOP -> Bishop(color, square, hasMoved = true)
 			PieceType.KNIGHT -> Knight(color, square, hasMoved = true)
-			PieceType.PAWN, PieceType.KING ->
-				throw IllegalArgumentException("Cannot promote to $type")
+			else -> Queen(color, square, hasMoved = true)
 		}
 	}
 
@@ -278,76 +287,76 @@ class Game(
 		require(pendingDrawOfferBy == null) { "A draw offer is already pending" }
 		require(by == turn.color) { "Only the side to move may offer a draw" }
 
-		return Game(
-			id = id,
-			board = board,
-			turn = turn,
-			status = status,
-			positionStatus = positionStatus,
-			result = result,
-			pendingDrawOfferBy = by,
-			whitePlayerId = whitePlayerId,
-			blackPlayerId = blackPlayerId,
-			halfmoveClock = halfmoveClock,
-			enPassantTarget = enPassantTarget,
-		)
+		return copy(pendingDrawOfferBy = by)
 	}
 
 	fun declineDraw(): Game {
 		require(pendingDrawOfferBy != null) { "No draw offer to respond to" }
 
-		return Game(
-			id = id,
-			board = board,
-			turn = turn,
-			status = status,
-			positionStatus = positionStatus,
-			result = result,
-			pendingDrawOfferBy = null,
-			whitePlayerId = whitePlayerId,
-			blackPlayerId = blackPlayerId,
-			halfmoveClock = halfmoveClock,
-			enPassantTarget = enPassantTarget,
-		)
+		return copy(pendingDrawOfferBy = null)
 	}
 
 	fun acceptDraw(): Game {
 		require(pendingDrawOfferBy != null) { "No draw offer to respond to" }
 
-		return Game(
-			id = id,
-			board = board,
-			turn = turn,
+		return copy(
 			status = GameStatus.FINISHED,
-			positionStatus = positionStatus,
 			result = GameResult(GameEndReason.DRAW_ACCEPTED),
 			pendingDrawOfferBy = null,
-			whitePlayerId = whitePlayerId,
-			blackPlayerId = blackPlayerId,
-			halfmoveClock = halfmoveClock,
-			enPassantTarget = enPassantTarget,
 		)
 	}
 
 	fun resign(by: Color): Game {
 		require(status == GameStatus.ONGOING) { "Game is not in progress" }
 
-		return Game(
-			id = id,
-			board = board,
-			turn = turn,
+		return copy(
 			status = GameStatus.FINISHED,
-			positionStatus = positionStatus,
 			result = GameResult(GameEndReason.RESIGNED, by.opposite()),
 			pendingDrawOfferBy = null,
-			whitePlayerId = whitePlayerId,
-			blackPlayerId = blackPlayerId,
-			halfmoveClock = halfmoveClock,
-			enPassantTarget = enPassantTarget,
 		)
 	}
 
 	fun showBoard(): String {
 		return "Turn ${turn.number}:\n\n${board.showBoard()}"
+	}
+
+	private fun hasInsufficientMaterial(): Boolean {
+		val nonKing = board.pieces().filter { it.type != PieceType.KING }
+		if (nonKing.any { it.type == PieceType.PAWN || it.type == PieceType.ROOK || it.type == PieceType.QUEEN }) {
+			return false
+		}
+		if (nonKing.size <= 1) return true
+		if (nonKing.size == 2) {
+			val bishops = nonKing.filter { it.type == PieceType.BISHOP }
+			if (bishops.size == 2 && bishops[0].color != bishops[1].color) {
+				val a = bishops[0].position
+				val b = bishops[1].position
+				val aLight = (a.file.ordinal + a.rank) % 2 == 0
+				val bLight = (b.file.ordinal + b.rank) % 2 == 0
+				return aLight == bLight
+			}
+		}
+		return false
+	}
+
+	private fun isThreefoldRepetition(): Boolean {
+		if (moveHistory.size < 8) return false
+		val current = positionKey()
+		var count = 1
+		var probe: Game? = previous
+		while (probe != null) {
+			if (probe.positionKey() == current) count++
+			if (count >= 3) return true
+			probe = probe.previous
+		}
+		return false
+	}
+
+	private fun positionKey(): String {
+		val pieces = board.pieces()
+			.map { "${it.type}${it.color}${it.position.file}${it.position.rank}" }
+			.sorted()
+			.joinToString(",")
+		return "$pieces|${turn.color}|${enPassantTarget?.let { "${it.file}${it.rank}" } ?: "-"}"
 	}
 }

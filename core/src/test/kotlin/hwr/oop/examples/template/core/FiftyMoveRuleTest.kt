@@ -18,10 +18,10 @@ class FiftyMoveRuleTest {
 		val board = Board()
 		board.place(King(Color.WHITE, Square(File.E, 1)))
 		board.place(King(Color.BLACK, Square(File.E, 8)))
-		board.place(Knight(Color.WHITE, Square(File.B, 1)))
+		board.place(Rook(Color.WHITE, Square(File.B, 1)))
 		val game = Game(GameID("game-1"), board, Turn(1, Color.WHITE))
 
-		val next = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
+		val next = game.makeMove(Move(Square(File.B, 1), Square(File.B, 3)))
 
 		assertThat(next.halfmoveClock).isEqualTo(1)
 	}
@@ -58,10 +58,10 @@ class FiftyMoveRuleTest {
 		val board = Board()
 		board.place(King(Color.WHITE, Square(File.E, 1)))
 		board.place(King(Color.BLACK, Square(File.E, 8)))
-		board.place(Knight(Color.WHITE, Square(File.B, 1)))
+		board.place(Rook(Color.WHITE, Square(File.B, 1)))
 		val game = Game(GameID("game-1"), board, Turn(1, Color.WHITE), halfmoveClock = 99)
 
-		val next = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
+		val next = game.makeMove(Move(Square(File.B, 1), Square(File.B, 3)))
 
 		assertThat(next.status).isEqualTo(GameStatus.FINISHED)
 		assertThat(next.result).isEqualTo(GameResult(GameEndReason.FIFTY_MOVE_RULE))
@@ -74,10 +74,10 @@ class FiftyMoveRuleTest {
 		val board = Board()
 		board.place(King(Color.WHITE, Square(File.E, 1)))
 		board.place(King(Color.BLACK, Square(File.E, 8)))
-		board.place(Knight(Color.WHITE, Square(File.B, 1)))
+		board.place(Rook(Color.WHITE, Square(File.B, 1)))
 		val game = Game(GameID("game-1"), board, Turn(1, Color.WHITE), halfmoveClock = 98)
 
-		val next = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
+		val next = game.makeMove(Move(Square(File.B, 1), Square(File.B, 3)))
 
 		assertThat(next.status).isEqualTo(GameStatus.ONGOING)
 		assertThat(next.result).isNull()
