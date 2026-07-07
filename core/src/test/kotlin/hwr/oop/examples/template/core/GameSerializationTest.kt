@@ -112,4 +112,93 @@ class GameSerializationTest {
 		// then
 		assertThat(exception).hasMessage("Could not load game with id: missing-game")
 	}
+
+	@Test
+	fun `game with every optional field populated round-trips through json`() {
+		// given — result, pendingDrawOfferBy, halfmoveClock, enPassantTarget, custom player ids
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		board.place(King(Color.BLACK, Square(File.E, 8)))
+		val game = Game(
+			id = GameID("game-1"),
+			board = board,
+			turn = Turn(5, Color.BLACK),
+			status = GameStatus.ONGOING,
+			positionStatus = PositionStatus.CHECK,
+			pendingDrawOfferBy = Color.BLACK,
+			whitePlayerId = "alice",
+			blackPlayerId = "bob",
+			halfmoveClock = 42,
+			enPassantTarget = Square(File.D, 6),
+		)
+
+		// when
+		val decoded = json.decodeFromString<Game>(json.encodeToString(game))
+
+		// then
+		assertThat(decoded.id.value).isEqualTo("game-1")
+		assertThat(decoded.turn.number).isEqualTo(5)
+		assertThat(decoded.turn.color).isEqualTo(Color.BLACK)
+		assertThat(decoded.status).isEqualTo(GameStatus.ONGOING)
+		assertThat(decoded.positionStatus).isEqualTo(PositionStatus.CHECK)
+		assertThat(decoded.pendingDrawOfferBy).isEqualTo(Color.BLACK)
+		assertThat(decoded.whitePlayerId).isEqualTo("alice")
+		assertThat(decoded.blackPlayerId).isEqualTo("bob")
+		assertThat(decoded.halfmoveClock).isEqualTo(42)
+		assertThat(decoded.enPassantTarget).isEqualTo(Square(File.D, 6))
+	}
+
+	@Test
+	fun `finished game result with a winner round-trips through json`() {
+		// given
+		val game = Game(
+			id = GameID("game-1"),
+			status = GameStatus.FINISHED,
+			result = GameResult(GameEndReason.CHECKMATE, Color.WHITE),
+		)
+
+		// when
+		val decoded = json.decodeFromString<Game>(json.encodeToString(game))
+
+		// then
+		assertThat(decoded.result).isEqualTo(GameResult(GameEndReason.CHECKMATE, Color.WHITE))
+	}
+
+	@Test
+	fun `board pieces preserve hasMoved flag through json in both states`() {
+		// given
+		val board = Board()
+		board.place(Pawn(Color.WHITE, Square(File.A, 2), hasMoved = false))
+		board.place(Pawn(Color.BLACK, Square(File.B, 5), hasMoved = true))
+
+		// when
+		val decoded = json.decodeFromString<Board>(json.encodeToString(board))
+
+		// then
+		assertThat(decoded.pieceAt(Square(File.A, 2))).isEqualTo(
+			Pawn(Color.WHITE, Square(File.A, 2), hasMoved = false)
+		)
+		assertThat(decoded.pieceAt(Square(File.B, 5))).isEqualTo(
+			Pawn(Color.BLACK, Square(File.B, 5), hasMoved = true)
+		)
+	}
+
+	@Test
+	fun `every game end reason round-trips through json`() {
+		for (reason in GameEndReason.entries) {
+			val decoded = json.decodeFromString<GameResult>(
+				json.encodeToString(GameResult(reason))
+			)
+			assertThat(decoded.reason).isEqualTo(reason)
+		}
+	}
+
+	@Test
+	fun `every position status round-trips through json`() {
+		for (status in PositionStatus.entries) {
+			val game = Game(GameID("game-1"), positionStatus = status)
+			val decoded = json.decodeFromString<Game>(json.encodeToString(game))
+			assertThat(decoded.positionStatus).isEqualTo(status)
+		}
+	}
 }

@@ -63,27 +63,6 @@ object MovementFactory {
 			.any { it.reaches(fileDistance, rankDistance) }
 	}
 
-	fun squaresBetween(from: Square, to: Square): List<Square> {
-		val fileDistance = to.file.ordinal - from.file.ordinal
-		val rankDistance = to.rank - from.rank
-		val isStraight = fileDistance == 0 || rankDistance == 0
-		val isDiagonal = kotlin.math.abs(fileDistance) == kotlin.math.abs(rankDistance)
-
-		if (!isStraight && !isDiagonal) return emptyList()
-
-		val fileStep = fileDistance.coerceIn(-1, 1)
-		val rankStep = rankDistance.coerceIn(-1, 1)
-		val result = mutableListOf<Square>()
-		var current = from.offset(fileStep, rankStep)
-
-		while (current != null && current != to) {
-			result.add(current)
-			current = current.offset(fileStep, rankStep)
-		}
-
-		return result
-	}
-
 	private fun movesInDirection(piece: Piece, board: Board, movement: MovementDirection): List<Move> {
 		val moves = mutableListOf<Move>()
 		var steps = 1

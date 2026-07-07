@@ -23,6 +23,7 @@ interface Piece {
 	}
 
 	fun symbol(): String {
-		return if (color == Color.WHITE) uppercaseSymbol else uppercaseSymbol.lowercase()
+		if (color == Color.WHITE) return uppercaseSymbol
+		return uppercaseSymbol.lowercase()
 	}
 }

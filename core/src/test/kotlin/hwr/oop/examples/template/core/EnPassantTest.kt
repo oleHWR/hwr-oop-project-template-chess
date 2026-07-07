@@ -191,4 +191,27 @@ class EnPassantTest {
 
 		assertThat(game.availableMoves()).noneMatch { it.to == Square(File.H, 6) }
 	}
+
+	@Test
+	fun `diagonal pawn capture on an occupied en passant target square is a normal capture`() {
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.A, 1)))
+		board.place(King(Color.BLACK, Square(File.A, 8)))
+		board.place(Pawn(Color.WHITE, Square(File.E, 5)))
+		board.place(Pawn(Color.BLACK, Square(File.F, 6)))
+		// Distinguishing piece on the would-be ep victim square: mutant would remove
+		// it, real code must not touch it.
+		board.place(Rook(Color.BLACK, Square(File.F, 5)))
+		val game = Game(
+			GameID("game-1"), board, Turn(1, Color.WHITE),
+			enPassantTarget = Square(File.F, 6),
+		)
+
+		val next = game.makeMove(Move(Square(File.E, 5), Square(File.F, 6)))
+
+		assertThat(next.board.pieceAt(Square(File.F, 6)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.F, 6), hasMoved = true))
+		assertThat(next.board.pieceAt(Square(File.F, 5)))
+			.isEqualTo(Rook(Color.BLACK, Square(File.F, 5)))
+	}
 }

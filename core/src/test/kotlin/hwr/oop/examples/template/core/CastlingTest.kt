@@ -229,4 +229,19 @@ class CastlingTest {
 
 		assertThat(game.availableMoves()).noneMatch { it.from == Square(File.E, 1) }
 	}
+
+	@Test
+	fun `both castles are present in availableMoves when the setup is clean`() {
+		val game = Game(GameID("g"), castlingBoard(Color.WHITE), Turn(1, Color.WHITE))
+
+		val castles = game.availableMoves().filter {
+			it.from == Square(File.E, 1) &&
+					(it.to == Square(File.G, 1) || it.to == Square(File.C, 1))
+		}
+
+		assertThat(castles).containsExactlyInAnyOrder(
+			Move(Square(File.E, 1), Square(File.G, 1)),
+			Move(Square(File.E, 1), Square(File.C, 1)),
+		)
+	}
 }

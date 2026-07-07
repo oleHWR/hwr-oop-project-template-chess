@@ -39,24 +39,20 @@ class Game(
 
 		val standard = board.pieces(turn.color)
 			.flatMap { MovementFactory.availableMoves(it, board) }
-		val enPassant = enPassantMoves()
-		val castles = castlingMoves()
 
-		return (standard + enPassant + castles).filter { !leavesOwnKingInCheck(it) }
+		return (standard + enPassantMoves() + castlingMoves())
+			.filter { !leavesOwnKingInCheck(it) }
 	}
 
 	private fun enPassantMoves(): List<Move> {
 		val target = enPassantTarget ?: return emptyList()
-		val victimRank = if (turn.color == Color.WHITE) target.rank - 1 else target.rank + 1
-		val victim = board.pieceAt(Square(target.file, victimRank))
+		val direction = if (turn.color == Color.WHITE) -1 else 1
+		val victimSquare = target.offset(0, direction) ?: return emptyList()
+		val victim = board.pieceAt(victimSquare)
 		if (victim?.type != PieceType.PAWN || victim.color == turn.color) return emptyList()
 
-		val candidateFiles = listOf(target.file.ordinal - 1, target.file.ordinal + 1)
-			.filter { it in 0..7 }
-			.map { File.entries[it] }
-
-		return candidateFiles.mapNotNull { file ->
-			val from = Square(file, victimRank)
+		return listOf(-1, 1).mapNotNull { fileDelta ->
+			val from = victimSquare.offset(fileDelta, 0) ?: return@mapNotNull null
 			val piece = board.pieceAt(from)
 			if (piece?.type == PieceType.PAWN && piece.color == turn.color) {
 				Move(from, target)

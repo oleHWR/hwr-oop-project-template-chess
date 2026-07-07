@@ -404,6 +404,27 @@ class BoardTest {
 	}
 
 	@Test
+	fun `isAttackedBy is false for an occupied square that no enemy piece attacks`() {
+		// given — target square is held by a friendly king, no black piece attacks it
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.E, 1)))
+		board.place(Rook(Color.BLACK, Square(File.H, 8)))
+
+		// when / then
+		assertThat(board.isAttackedBy(Square(File.E, 1), Color.BLACK)).isFalse()
+	}
+
+	@Test
+	fun `isAttackedBy is false for an empty square that no enemy piece reaches`() {
+		// given
+		val board = Board()
+		board.place(Rook(Color.WHITE, Square(File.A, 1)))
+
+		// when / then — B5 is not on the rook's rank or file
+		assertThat(board.isAttackedBy(Square(File.B, 5), Color.WHITE)).isFalse()
+	}
+
+	@Test
 	fun `isAttackedBy is false when no piece of that color exists`() {
 		// given
 		val board = Board()
