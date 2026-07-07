@@ -6,4 +6,5 @@ import kotlinx.serialization.Serializable
 data class Move(
 	val from: Square,
 	val to: Square,
+	val promotion: PieceType? = null,
 )

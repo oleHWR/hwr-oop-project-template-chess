@@ -41,7 +41,16 @@ class Game(
 			.flatMap { MovementFactory.availableMoves(it, board) }
 
 		return (standard + enPassantMoves() + castlingMoves())
+			.flatMap { expandPromotions(it) }
 			.filter { !leavesOwnKingInCheck(it) }
+	}
+
+	private fun expandPromotions(move: Move): List<Move> {
+		val piece = board.pieceAt(move.from) ?: return listOf(move)
+		val promotionRank = if (piece.color == Color.WHITE) 8 else 1
+		if (piece.type != PieceType.PAWN || move.to.rank != promotionRank) return listOf(move)
+		return listOf(PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT)
+			.map { Move(move.from, move.to, it) }
 	}
 
 	private fun enPassantMoves(): List<Move> {
@@ -215,6 +224,22 @@ class Game(
 				Square(File.A, rank) to Square(File.D, rank)
 			}
 			target.applyMove(Move(rookFrom, rookTo))
+		}
+		if (move.promotion != null) {
+			val piece = target.pieceAt(move.to) ?: return
+			target.remove(move.to)
+			target.place(promotedPiece(move.promotion, piece.color, move.to))
+		}
+	}
+
+	private fun promotedPiece(type: PieceType, color: Color, square: Square): Piece {
+		return when (type) {
+			PieceType.QUEEN -> Queen(color, square, hasMoved = true)
+			PieceType.ROOK -> Rook(color, square, hasMoved = true)
+			PieceType.BISHOP -> Bishop(color, square, hasMoved = true)
+			PieceType.KNIGHT -> Knight(color, square, hasMoved = true)
+			PieceType.PAWN, PieceType.KING ->
+				throw IllegalArgumentException("Cannot promote to $type")
 		}
 	}
 
