@@ -1,7 +1,6 @@
 package hwr.oop.examples.template.core
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 @Serializable
 class Game(
@@ -17,7 +16,6 @@ class Game(
 	val halfmoveClock: Int = 0,
 	val enPassantTarget: Square? = null,
 	val moveHistory: List<Move> = emptyList(),
-	@Transient val previous: Game? = null,
 ) {
 	init {
 		require(whitePlayerId.isNotBlank()) { "White player ID must not be blank" }
@@ -115,7 +113,6 @@ class Game(
 		require(status == GameStatus.ONGOING) { "Game is not in progress" }
 		require(move in availableMoves()) { "Move is not available" }
 
-		val snapshot = snapshotBefore()
 		val movingPiece = board.pieceAt(move.from)
 		val isEnPassant = isEnPassantMove(move, movingPiece, board)
 		val isCastling = isCastlingMove(move, movingPiece)
@@ -147,7 +144,6 @@ class Game(
 			halfmoveClock = nextHalfmoveClock,
 			enPassantTarget = nextEnPassantTarget,
 			moveHistory = nextHistory,
-			previous = snapshot,
 		)
 
 		val endResult = resolveEndResult(probe, turn.color, nextPositionStatus)
@@ -194,30 +190,19 @@ class Game(
 			halfmoveClock = halfmoveClock,
 			enPassantTarget = enPassantTarget,
 			moveHistory = moveHistory,
-			previous = previous,
 		)
 	}
 
 	fun undo(): Game {
-		return previous ?: throw IllegalStateException("No move to undo")
-	}
-
-	private fun snapshotBefore(): Game {
-		return Game(
+		if (moveHistory.isEmpty()) throw IllegalStateException("No move to undo")
+		val history = moveHistory.dropLast(1)
+		var replay = Game(
 			id = id,
-			board = board.copy(),
-			turn = turn,
-			status = status,
-			positionStatus = positionStatus,
-			result = result,
-			pendingDrawOfferBy = pendingDrawOfferBy,
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
-			halfmoveClock = halfmoveClock,
-			enPassantTarget = enPassantTarget,
-			moveHistory = moveHistory,
-			previous = previous,
 		)
+		for (m in history) replay = replay.makeMove(m)
+		return replay
 	}
 
 	private fun applyMoveOn(target: Board, move: Move, isEnPassant: Boolean, isCastling: Boolean) {
@@ -341,15 +326,40 @@ class Game(
 
 	private fun isThreefoldRepetition(): Boolean {
 		if (moveHistory.size < 8) return false
-		val current = positionKey()
-		var count = 1
-		var probe: Game? = previous
-		while (probe != null) {
-			if (probe.positionKey() == current) count++
+		val target = positionKey()
+		var replay = Game(id = id, whitePlayerId = whitePlayerId, blackPlayerId = blackPlayerId)
+		var count = if (replay.positionKey() == target) 1 else 0
+		for (m in moveHistory) {
+			replay = replay.makeMoveInternal(m)
+			if (replay.positionKey() == target) count++
 			if (count >= 3) return true
-			probe = probe.previous
 		}
 		return false
+	}
+
+	private fun makeMoveInternal(move: Move): Game {
+		val movingPiece = board.pieceAt(move.from)
+		val isEnPassant = isEnPassantMove(move, movingPiece, board)
+		val isCastling = isCastlingMove(move, movingPiece)
+		val captured = board.pieceAt(move.to) != null || isEnPassant
+		val isPawnMove = movingPiece?.type == PieceType.PAWN
+		val nextHalfmoveClock = if (isPawnMove || captured) 0 else halfmoveClock + 1
+		applyMoveOn(board, move, isEnPassant, isCastling)
+		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
+		val nextTurn = turn.next()
+		return Game(
+			id = id,
+			board = board,
+			turn = nextTurn,
+			status = GameStatus.ONGOING,
+			positionStatus = PositionStatus.NORMAL,
+			pendingDrawOfferBy = null,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
+			halfmoveClock = nextHalfmoveClock,
+			enPassantTarget = nextEnPassantTarget,
+			moveHistory = moveHistory + move,
+		)
 	}
 
 	private fun positionKey(): String {

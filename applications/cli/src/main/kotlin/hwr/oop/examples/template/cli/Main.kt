@@ -35,6 +35,7 @@ fun buildCli(persistence: GameRepository): CliktCommand {
 				OfferDrawCommand(persistence),
 				AcceptDrawCommand(persistence),
 				DeclineDrawCommand(persistence),
+				UndoCommand(persistence),
 			),
 		)
 }

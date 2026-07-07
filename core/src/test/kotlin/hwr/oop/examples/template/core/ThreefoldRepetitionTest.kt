@@ -7,22 +7,12 @@ class ThreefoldRepetitionTest {
 
 	@Test
 	fun `game ends in threefold repetition when the same position occurs three times`() {
-		// Knight shuffle: white and black knights bounce between two squares each
-		// for four half-moves, reaching the starting position three times total.
-		val board = Board()
-		board.place(King(Color.WHITE, Square(File.A, 1)))
-		board.place(King(Color.BLACK, Square(File.A, 8)))
-		board.place(Rook(Color.WHITE, Square(File.H, 1)))
-		board.place(Rook(Color.BLACK, Square(File.H, 8)))
-		board.place(Knight(Color.WHITE, Square(File.B, 1)))
-		board.place(Knight(Color.BLACK, Square(File.B, 8)))
-		var game = Game(GameID("g"), board, Turn(1, Color.WHITE))
-
+		var game = Game(GameID("g"))
 		repeat(2) {
-			game = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
-			game = game.makeMove(Move(Square(File.B, 8), Square(File.C, 6)))
-			game = game.makeMove(Move(Square(File.C, 3), Square(File.B, 1)))
-			game = game.makeMove(Move(Square(File.C, 6), Square(File.B, 8)))
+			game = game.makeMove(Move(Square(File.G, 1), Square(File.F, 3)))
+			game = game.makeMove(Move(Square(File.G, 8), Square(File.F, 6)))
+			game = game.makeMove(Move(Square(File.F, 3), Square(File.G, 1)))
+			game = game.makeMove(Move(Square(File.F, 6), Square(File.G, 8)))
 		}
 
 		assertThat(game.status).isEqualTo(GameStatus.FINISHED)
@@ -31,19 +21,11 @@ class ThreefoldRepetitionTest {
 
 	@Test
 	fun `game does not end when a position repeats only twice`() {
-		val board = Board()
-		board.place(King(Color.WHITE, Square(File.A, 1)))
-		board.place(King(Color.BLACK, Square(File.A, 8)))
-		board.place(Rook(Color.WHITE, Square(File.H, 1)))
-		board.place(Rook(Color.BLACK, Square(File.H, 8)))
-		board.place(Knight(Color.WHITE, Square(File.B, 1)))
-		board.place(Knight(Color.BLACK, Square(File.B, 8)))
-		var game = Game(GameID("g"), board, Turn(1, Color.WHITE))
-
-		game = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
-		game = game.makeMove(Move(Square(File.B, 8), Square(File.C, 6)))
-		game = game.makeMove(Move(Square(File.C, 3), Square(File.B, 1)))
-		game = game.makeMove(Move(Square(File.C, 6), Square(File.B, 8)))
+		var game = Game(GameID("g"))
+		game = game.makeMove(Move(Square(File.G, 1), Square(File.F, 3)))
+		game = game.makeMove(Move(Square(File.G, 8), Square(File.F, 6)))
+		game = game.makeMove(Move(Square(File.F, 3), Square(File.G, 1)))
+		game = game.makeMove(Move(Square(File.F, 6), Square(File.G, 8)))
 
 		assertThat(game.status).isEqualTo(GameStatus.ONGOING)
 	}

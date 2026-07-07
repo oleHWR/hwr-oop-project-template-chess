@@ -118,6 +118,29 @@ class CliFileSystemTest {
 		buildCli(persistence).parse(listOf("onGameID", "game-1", "getAvailableMoves"))
 	}
 
+	@Test
+	fun `undo reverts the most recent move`() {
+		startGame()
+		buildCli(persistence).parse(
+			listOf(
+				"onGameID", "game-1",
+				"makeMove",
+				"--player-id", "alice",
+				"--from", "E2",
+				"--to", "E4",
+			)
+		)
+
+		buildCli(persistence).parse(listOf("onGameID", "game-1", "undo"))
+
+		val game = persistence.loadById(GameID("game-1"))
+		assertThat(game.turn.color).isEqualTo(Color.WHITE)
+		assertThat(game.moveHistory).isEmpty()
+		assertThat(game.board.pieceAt(Square(File.E, 2)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 2)))
+		assertThat(game.board.pieceAt(Square(File.E, 4))).isNull()
+	}
+
 	private fun startGame() {
 		buildCli(persistence).parse(
 			listOf(
