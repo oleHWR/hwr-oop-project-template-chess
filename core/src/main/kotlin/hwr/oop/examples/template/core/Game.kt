@@ -38,8 +38,9 @@ class Game(
 		val standard = board.pieces(turn.color)
 			.flatMap { MovementFactory.availableMoves(it, board) }
 		val enPassant = enPassantMoves()
+		val castles = castlingMoves()
 
-		return (standard + enPassant).filter { !leavesOwnKingInCheck(it) }
+		return (standard + enPassant + castles).filter { !leavesOwnKingInCheck(it) }
 	}
 
 	private fun enPassantMoves(): List<Move> {
@@ -63,17 +64,57 @@ class Game(
 		}
 	}
 
+	private fun castlingMoves(): List<Move> {
+		val rank = if (turn.color == Color.WHITE) 1 else 8
+		val kingSquare = Square(File.E, rank)
+		val king = board.pieceAt(kingSquare)
+		if (king?.type != PieceType.KING || king.color != turn.color || king.hasMoved) return emptyList()
+		if (board.isAttackedBy(kingSquare, turn.color.opposite())) return emptyList()
+
+		val moves = mutableListOf<Move>()
+
+		val kingsideRook = board.pieceAt(Square(File.H, rank))
+		if (
+			kingsideRook?.type == PieceType.ROOK &&
+			kingsideRook.color == turn.color &&
+			!kingsideRook.hasMoved &&
+			board.pieceAt(Square(File.F, rank)) == null &&
+			board.pieceAt(Square(File.G, rank)) == null &&
+			!board.isAttackedBy(Square(File.F, rank), turn.color.opposite()) &&
+			!board.isAttackedBy(Square(File.G, rank), turn.color.opposite())
+		) {
+			moves.add(Move(kingSquare, Square(File.G, rank)))
+		}
+
+		val queensideRook = board.pieceAt(Square(File.A, rank))
+		if (
+			queensideRook?.type == PieceType.ROOK &&
+			queensideRook.color == turn.color &&
+			!queensideRook.hasMoved &&
+			board.pieceAt(Square(File.B, rank)) == null &&
+			board.pieceAt(Square(File.C, rank)) == null &&
+			board.pieceAt(Square(File.D, rank)) == null &&
+			!board.isAttackedBy(Square(File.D, rank), turn.color.opposite()) &&
+			!board.isAttackedBy(Square(File.C, rank), turn.color.opposite())
+		) {
+			moves.add(Move(kingSquare, Square(File.C, rank)))
+		}
+
+		return moves
+	}
+
 	fun makeMove(move: Move): Game {
 		require(status == GameStatus.ONGOING) { "Game is not in progress" }
 		require(move in availableMoves()) { "Move is not available" }
 
 		val movingPiece = board.pieceAt(move.from)
 		val isEnPassant = isEnPassantMove(move, movingPiece, board)
+		val isCastling = isCastlingMove(move, movingPiece)
 		val captured = board.pieceAt(move.to) != null || isEnPassant
 		val isPawnMove = movingPiece?.type == PieceType.PAWN
 		val nextHalfmoveClock = if (isPawnMove || captured) 0 else halfmoveClock + 1
 
-		applyMoveOn(board, move, isEnPassant)
+		applyMoveOn(board, move, isEnPassant, isCastling)
 
 		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
 		val nextTurn = turn.next()
@@ -137,12 +178,21 @@ class Game(
 		return ongoing
 	}
 
-	private fun applyMoveOn(target: Board, move: Move, isEnPassant: Boolean) {
+	private fun applyMoveOn(target: Board, move: Move, isEnPassant: Boolean, isCastling: Boolean) {
 		if (isEnPassant) {
 			val capturedRank = if (turn.color == Color.WHITE) move.to.rank - 1 else move.to.rank + 1
 			target.remove(Square(move.to.file, capturedRank))
 		}
 		target.applyMove(move)
+		if (isCastling) {
+			val rank = move.to.rank
+			val (rookFrom, rookTo) = if (move.to.file == File.G) {
+				Square(File.H, rank) to Square(File.F, rank)
+			} else {
+				Square(File.A, rank) to Square(File.D, rank)
+			}
+			target.applyMove(Move(rookFrom, rookTo))
+		}
 	}
 
 	private fun computeEnPassantTarget(piece: Piece?, move: Move): Square? {
@@ -157,7 +207,8 @@ class Game(
 		val probe = board.copy()
 		val movingPiece = probe.pieceAt(move.from)
 		val isEnPassant = isEnPassantMove(move, movingPiece, probe)
-		applyMoveOn(probe, move, isEnPassant)
+		val isCastling = isCastlingMove(move, movingPiece)
+		applyMoveOn(probe, move, isEnPassant, isCastling)
 		val ownKing = probe.kingSquare(turn.color) ?: return false
 		return probe.isAttackedBy(ownKing, turn.color.opposite())
 	}
@@ -167,6 +218,11 @@ class Game(
 		if (move.to != enPassantTarget) return false
 		if (move.from.file == move.to.file) return false
 		return boardView.pieceAt(move.to) == null
+	}
+
+	private fun isCastlingMove(move: Move, piece: Piece?): Boolean {
+		if (piece?.type != PieceType.KING) return false
+		return kotlin.math.abs(move.to.file.ordinal - move.from.file.ordinal) == 2
 	}
 
 	fun offerDraw(by: Color): Game {
