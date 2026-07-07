@@ -14,6 +14,7 @@ class Game(
 	val whitePlayerId: String = "WHITE",
 	val blackPlayerId: String = "BLACK",
 	val halfmoveClock: Int = 0,
+	val enPassantTarget: Square? = null,
 ) {
 	init {
 		require(whitePlayerId.isNotBlank()) { "White player ID must not be blank" }
@@ -34,9 +35,32 @@ class Game(
 	fun availableMoves(): List<Move> {
 		if (status == GameStatus.FINISHED) return emptyList()
 
-		return board.pieces(turn.color)
+		val standard = board.pieces(turn.color)
 			.flatMap { MovementFactory.availableMoves(it, board) }
-			.filter { !leavesOwnKingInCheck(it) }
+		val enPassant = enPassantMoves()
+
+		return (standard + enPassant).filter { !leavesOwnKingInCheck(it) }
+	}
+
+	private fun enPassantMoves(): List<Move> {
+		val target = enPassantTarget ?: return emptyList()
+		val victimRank = if (turn.color == Color.WHITE) target.rank - 1 else target.rank + 1
+		val victim = board.pieceAt(Square(target.file, victimRank))
+		if (victim?.type != PieceType.PAWN || victim.color == turn.color) return emptyList()
+
+		val candidateFiles = listOf(target.file.ordinal - 1, target.file.ordinal + 1)
+			.filter { it in 0..7 }
+			.map { File.entries[it] }
+
+		return candidateFiles.mapNotNull { file ->
+			val from = Square(file, victimRank)
+			val piece = board.pieceAt(from)
+			if (piece?.type == PieceType.PAWN && piece.color == turn.color) {
+				Move(from, target)
+			} else {
+				null
+			}
+		}
 	}
 
 	fun makeMove(move: Move): Game {
@@ -44,11 +68,14 @@ class Game(
 		require(move in availableMoves()) { "Move is not available" }
 
 		val movingPiece = board.pieceAt(move.from)
-		val captured = board.pieceAt(move.to) != null
+		val isEnPassant = isEnPassantMove(move, movingPiece, board)
+		val captured = board.pieceAt(move.to) != null || isEnPassant
 		val isPawnMove = movingPiece?.type == PieceType.PAWN
 		val nextHalfmoveClock = if (isPawnMove || captured) 0 else halfmoveClock + 1
 
-		board.applyMove(move)
+		applyMoveOn(board, move, isEnPassant)
+
+		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
 		val nextTurn = turn.next()
 		val nextKingSquare = board.kingSquare(nextTurn.color)
 		val nextPositionStatus = when {
@@ -67,6 +94,7 @@ class Game(
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = nextHalfmoveClock,
+			enPassantTarget = nextEnPassantTarget,
 		)
 
 		if (ongoing.availableMoves().isEmpty()) {
@@ -87,6 +115,7 @@ class Game(
 				whitePlayerId = whitePlayerId,
 				blackPlayerId = blackPlayerId,
 				halfmoveClock = nextHalfmoveClock,
+				enPassantTarget = nextEnPassantTarget,
 			)
 		}
 
@@ -101,17 +130,43 @@ class Game(
 				whitePlayerId = whitePlayerId,
 				blackPlayerId = blackPlayerId,
 				halfmoveClock = nextHalfmoveClock,
+				enPassantTarget = nextEnPassantTarget,
 			)
 		}
 
 		return ongoing
 	}
 
+	private fun applyMoveOn(target: Board, move: Move, isEnPassant: Boolean) {
+		if (isEnPassant) {
+			val capturedRank = if (turn.color == Color.WHITE) move.to.rank - 1 else move.to.rank + 1
+			target.remove(Square(move.to.file, capturedRank))
+		}
+		target.applyMove(move)
+	}
+
+	private fun computeEnPassantTarget(piece: Piece?, move: Move): Square? {
+		if (piece?.type != PieceType.PAWN) return null
+		val rankDiff = move.to.rank - move.from.rank
+		if (kotlin.math.abs(rankDiff) != 2) return null
+		val skippedRank = (move.from.rank + move.to.rank) / 2
+		return Square(move.from.file, skippedRank)
+	}
+
 	private fun leavesOwnKingInCheck(move: Move): Boolean {
 		val probe = board.copy()
-		probe.applyMove(move)
+		val movingPiece = probe.pieceAt(move.from)
+		val isEnPassant = isEnPassantMove(move, movingPiece, probe)
+		applyMoveOn(probe, move, isEnPassant)
 		val ownKing = probe.kingSquare(turn.color) ?: return false
 		return probe.isAttackedBy(ownKing, turn.color.opposite())
+	}
+
+	private fun isEnPassantMove(move: Move, piece: Piece?, boardView: Board): Boolean {
+		if (piece?.type != PieceType.PAWN) return false
+		if (move.to != enPassantTarget) return false
+		if (move.from.file == move.to.file) return false
+		return boardView.pieceAt(move.to) == null
 	}
 
 	fun offerDraw(by: Color): Game {
@@ -130,6 +185,7 @@ class Game(
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
 		)
 	}
 
@@ -147,6 +203,7 @@ class Game(
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
 		)
 	}
 
@@ -164,6 +221,7 @@ class Game(
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
 		)
 	}
 
@@ -181,6 +239,7 @@ class Game(
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
 		)
 	}
 

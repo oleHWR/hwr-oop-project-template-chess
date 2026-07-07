@@ -62,7 +62,11 @@ class Board {
 		require(pieceAt(piece.position) == null) { "Square is already occupied" }
 		pieces[piece.position] = piece
 	}
-	
+
+	fun remove(square: Square) {
+		pieces.remove(square)
+	}
+
 	fun applyMove(move: Move) {
 		val piece = pieceAt(move.from)
 		require(piece != null) { "No piece on start square" }
