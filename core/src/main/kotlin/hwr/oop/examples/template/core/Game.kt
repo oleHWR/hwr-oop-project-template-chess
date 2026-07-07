@@ -1,6 +1,7 @@
 package hwr.oop.examples.template.core
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 class Game(
@@ -15,6 +16,7 @@ class Game(
 	val blackPlayerId: String = "BLACK",
 	val halfmoveClock: Int = 0,
 	val enPassantTarget: Square? = null,
+	@Transient val previous: Game? = null,
 ) {
 	init {
 		require(whitePlayerId.isNotBlank()) { "White player ID must not be blank" }
@@ -107,6 +109,7 @@ class Game(
 		require(status == GameStatus.ONGOING) { "Game is not in progress" }
 		require(move in availableMoves()) { "Move is not available" }
 
+		val snapshot = snapshotBefore()
 		val movingPiece = board.pieceAt(move.from)
 		val isEnPassant = isEnPassantMove(move, movingPiece, board)
 		val isCastling = isCastlingMove(move, movingPiece)
@@ -136,6 +139,7 @@ class Game(
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = nextHalfmoveClock,
 			enPassantTarget = nextEnPassantTarget,
+			previous = snapshot,
 		)
 
 		if (ongoing.availableMoves().isEmpty()) {
@@ -157,6 +161,7 @@ class Game(
 				blackPlayerId = blackPlayerId,
 				halfmoveClock = nextHalfmoveClock,
 				enPassantTarget = nextEnPassantTarget,
+				previous = snapshot,
 			)
 		}
 
@@ -172,10 +177,32 @@ class Game(
 				blackPlayerId = blackPlayerId,
 				halfmoveClock = nextHalfmoveClock,
 				enPassantTarget = nextEnPassantTarget,
+				previous = snapshot,
 			)
 		}
 
 		return ongoing
+	}
+
+	fun undo(): Game {
+		return previous ?: throw IllegalStateException("No move to undo")
+	}
+
+	private fun snapshotBefore(): Game {
+		return Game(
+			id = id,
+			board = board.copy(),
+			turn = turn,
+			status = status,
+			positionStatus = positionStatus,
+			result = result,
+			pendingDrawOfferBy = pendingDrawOfferBy,
+			whitePlayerId = whitePlayerId,
+			blackPlayerId = blackPlayerId,
+			halfmoveClock = halfmoveClock,
+			enPassantTarget = enPassantTarget,
+			previous = previous,
+		)
 	}
 
 	private fun applyMoveOn(target: Board, move: Move, isEnPassant: Boolean, isCastling: Boolean) {
