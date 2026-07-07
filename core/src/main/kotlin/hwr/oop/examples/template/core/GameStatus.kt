@@ -17,6 +17,7 @@ enum class GameEndReason {
 	STALEMATE,
 	DRAW_ACCEPTED,
 	RESIGNED,
+	FIFTY_MOVE_RULE,
 }
 
 @Serializable
