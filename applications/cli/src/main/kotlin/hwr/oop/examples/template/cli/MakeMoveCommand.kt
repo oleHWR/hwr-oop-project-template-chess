@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.requireObject
 import hwr.oop.examples.template.core.GameID
 import hwr.oop.examples.template.core.Move
+import hwr.oop.examples.template.core.PieceType
 import hwr.oop.examples.template.ports.out.GameRepository
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
@@ -22,16 +23,31 @@ class MakeMoveCommand(
 	)
 	
 	override fun run() {
-		if (promotionPiece != null) {
-			throw UsageError("Pawn promotion is not implemented yet")
-		}
 		val game = persistence.loadById(GameID(gameId))
 		val playerColor = game.colorForPlayer(playerId)
 		if (playerColor != game.turn.color) {
 			throw UsageError("It is ${game.turn.color}'s turn")
 		}
-		val updated = game.makeMove(Move(from.parseSquare(), to.parseSquare()))
+		val updated = game.makeMove(
+			Move(
+				from.parseSquare(),
+				to.parseSquare(),
+				promotionPiece?.parsePromotionPiece(),
+			)
+		)
 		persistence.save(updated)
 		echo(updated.formatForCli())
+	}
+}
+
+private fun String.parsePromotionPiece(): PieceType {
+	return try {
+		PieceType.valueOf(trim().uppercase())
+	} catch (e: IllegalArgumentException) {
+		throw UsageError("Promotion piece must be one of QUEEN, ROOK, BISHOP, KNIGHT")
+	}.also {
+		if (it == PieceType.KING || it == PieceType.PAWN) {
+			throw UsageError("Promotion piece must be one of QUEEN, ROOK, BISHOP, KNIGHT")
+		}
 	}
 }

@@ -67,7 +67,10 @@ class Controller(
 		gameId: String?,
 		drawResponseRequest: @Valid DrawResponseRequest?,
 	): ResponseEntity<GameState> {
+		val request = requireNotNull(drawResponseRequest)
 		val game = persistence.loadById(GameID(requireNotNull(gameId)))
+		val playerColor = game.colorFor(request.playerId)
+		require(game.pendingDrawOfferBy != playerColor) { "Only the opponent may respond to a draw offer" }
 		val updated = game.acceptDraw()
 		persistence.save(updated)
 		return ResponseEntity.ok(updated.toState())
@@ -77,7 +80,10 @@ class Controller(
 		gameId: String?,
 		drawResponseRequest: @Valid DrawResponseRequest?,
 	): ResponseEntity<GameState> {
+		val request = requireNotNull(drawResponseRequest)
 		val game = persistence.loadById(GameID(requireNotNull(gameId)))
+		val playerColor = game.colorFor(request.playerId)
+		require(game.pendingDrawOfferBy != playerColor) { "Only the opponent may respond to a draw offer" }
 		val updated = game.declineDraw()
 		persistence.save(updated)
 		return ResponseEntity.ok(updated.toState())
@@ -89,6 +95,8 @@ class Controller(
 	): ResponseEntity<GameState> {
 		val request = requireNotNull(makeMoveRequest)
 		val game = persistence.loadById(GameID(requireNotNull(gameId)))
+		val playerColor = game.colorFor(request.playerId)
+		require(playerColor == game.turn.color) { "It is ${game.turn.color}'s turn" }
 		val move = Move(
 			from = request.from.toDomain(),
 			to = request.to.toDomain(),

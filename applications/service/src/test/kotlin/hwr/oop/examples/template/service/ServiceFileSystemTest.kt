@@ -2,9 +2,12 @@ package hwr.oop.examples.template.service
 
 import hwr.oop.examples.template.FileSystemPersistence
 import hwr.oop.examples.template.FileSystemPersistenceConfiguration
+import hwr.oop.examples.template.core.Color
+import hwr.oop.examples.template.core.GameID
 import hwr.oop.examples.template.ports.out.GameRepository
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,6 +48,9 @@ class ServiceFileSystemTest {
 	@Autowired
 	private lateinit var webApplicationContext: WebApplicationContext
 
+	@Autowired
+	private lateinit var persistence: GameRepository
+
 	private lateinit var mockMvc: MockMvc
 
 	@BeforeEach
@@ -81,6 +87,43 @@ class ServiceFileSystemTest {
 		mockMvc.perform(get("/games/$gameId"))
 			.andExpect(status().isOk)
 			.andExpect(jsonPath("$.gameId").value(gameId))
+	}
+
+	@Test
+	fun `move endpoint rejects a player who is not on turn`() {
+		val gameId = createGame()
+
+		mockMvc.perform(
+			post("/games/$gameId/moves")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(
+					"""{"playerId":"bob","from":{"file":"E","rank":2},"to":{"file":"E","rank":4}}"""
+				)
+		)
+			.andExpect(status().isInternalServerError)
+
+		val stored = persistence.loadById(GameID(gameId))
+		assertThat(stored.turn.color).isEqualTo(Color.WHITE)
+	}
+
+	@Test
+	fun `draw response endpoint rejects the player who made the offer`() {
+		val gameId = createGame()
+		mockMvc.perform(
+			post("/games/$gameId/draw-offer")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""{"playerId":"alice"}""")
+		).andExpect(status().isOk)
+
+		mockMvc.perform(
+			post("/games/$gameId/draw-offer/acceptance")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""{"playerId":"alice"}""")
+		)
+			.andExpect(status().isInternalServerError)
+
+		val stored = persistence.loadById(GameID(gameId))
+		assertThat(stored.pendingDrawOfferBy).isEqualTo(Color.WHITE)
 	}
 
 	@Test

@@ -3,12 +3,17 @@ package hwr.oop.examples.template.cli
 import com.github.ajalt.clikt.core.parse
 import hwr.oop.examples.template.FileSystemPersistence
 import hwr.oop.examples.template.FileSystemPersistenceConfiguration
+import hwr.oop.examples.template.core.Board
 import hwr.oop.examples.template.core.Color
 import hwr.oop.examples.template.core.File
+import hwr.oop.examples.template.core.Game
 import hwr.oop.examples.template.core.GameID
 import hwr.oop.examples.template.core.GameStatus
+import hwr.oop.examples.template.core.King
 import hwr.oop.examples.template.core.Pawn
+import hwr.oop.examples.template.core.Queen
 import hwr.oop.examples.template.core.Square
+import hwr.oop.examples.template.core.Turn
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.assertj.core.api.Assertions.assertThat
@@ -79,6 +84,42 @@ class CliFileSystemTest {
 		assertThat(game.board.pieceAt(Square(File.E, 2))).isNull()
 		assertThat(game.board.pieceAt(Square(File.E, 4)))
 			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 4), hasMoved = true))
+	}
+
+	@Test
+	fun `make move supports pawn promotion and stores the promoted piece`() {
+		// given
+		val board = Board()
+		board.place(King(Color.WHITE, Square(File.A, 1)))
+		board.place(King(Color.BLACK, Square(File.A, 8)))
+		board.place(Pawn(Color.WHITE, Square(File.E, 7), hasMoved = true))
+		persistence.save(
+			Game(
+				id = GameID("promotion-game"),
+				board = board,
+				turn = Turn(1, Color.WHITE),
+				whitePlayerId = "alice",
+				blackPlayerId = "bob",
+			)
+		)
+
+		// when
+		buildCli(persistence).parse(
+			listOf(
+				"onGameID", "promotion-game",
+				"makeMove",
+				"--player-id", "alice",
+				"--from", "E7",
+				"--to", "E8",
+				"--promotion-piece", "QUEEN",
+			)
+		)
+
+		// then
+		val game = persistence.loadById(GameID("promotion-game"))
+		assertThat(game.board.pieceAt(Square(File.E, 8)))
+			.isEqualTo(Queen(Color.WHITE, Square(File.E, 8), hasMoved = true))
+		assertThat(game.board.pieceAt(Square(File.E, 7))).isNull()
 	}
 
 	@Test

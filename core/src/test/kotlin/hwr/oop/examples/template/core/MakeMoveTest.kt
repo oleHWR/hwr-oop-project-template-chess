@@ -22,6 +22,21 @@ class MakeMoveTest {
 	}
 
 	@Test
+	fun `makeMove leaves the original board unchanged`() {
+		// given
+		val game = Game(GameID("game-1"))
+
+		// when
+		val next = game.makeMove(Move(Square(File.E, 2), Square(File.E, 4)))
+
+		// then
+		assertThat(game.board.pieceAt(Square(File.E, 2)))
+			.isEqualTo(Pawn(Color.WHITE, Square(File.E, 2)))
+		assertThat(game.board.pieceAt(Square(File.E, 4))).isNull()
+		assertThat(next.board.pieceAt(Square(File.E, 2))).isNull()
+	}
+
+	@Test
 	fun `makeMove switches player from white to black without bumping turn number`() {
 		// given
 		val game = Game(GameID("game-1"))

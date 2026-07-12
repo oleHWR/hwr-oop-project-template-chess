@@ -120,21 +120,22 @@ class Game(
 		val isPawnMove = movingPiece?.type == PieceType.PAWN
 		val nextHalfmoveClock = if (isPawnMove || captured) 0 else halfmoveClock + 1
 
-		applyMoveOn(board, move, isEnPassant, isCastling)
+		val nextBoard = board.copy()
+		applyMoveOn(nextBoard, move, isEnPassant, isCastling)
 
 		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
 		val nextTurn = turn.next()
-		val nextKingSquare = board.kingSquare(nextTurn.color)
+		val nextKingSquare = nextBoard.kingSquare(nextTurn.color)
 		val nextPositionStatus = when {
 			nextKingSquare == null -> PositionStatus.NORMAL
-			board.isAttackedBy(nextKingSquare, turn.color) -> PositionStatus.CHECK
+			nextBoard.isAttackedBy(nextKingSquare, turn.color) -> PositionStatus.CHECK
 			else -> PositionStatus.NORMAL
 		}
 		val nextHistory = moveHistory + move
 
 		val probe = Game(
 			id = id,
-			board = board,
+			board = nextBoard,
 			turn = nextTurn,
 			status = GameStatus.ONGOING,
 			positionStatus = nextPositionStatus,
@@ -344,12 +345,13 @@ class Game(
 		val captured = board.pieceAt(move.to) != null || isEnPassant
 		val isPawnMove = movingPiece?.type == PieceType.PAWN
 		val nextHalfmoveClock = if (isPawnMove || captured) 0 else halfmoveClock + 1
-		applyMoveOn(board, move, isEnPassant, isCastling)
+		val nextBoard = board.copy()
+		applyMoveOn(nextBoard, move, isEnPassant, isCastling)
 		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
 		val nextTurn = turn.next()
 		return Game(
 			id = id,
-			board = board,
+			board = nextBoard,
 			turn = nextTurn,
 			status = GameStatus.ONGOING,
 			positionStatus = PositionStatus.NORMAL,

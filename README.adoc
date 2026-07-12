@@ -56,7 +56,7 @@ just test
 ----
 
 Führt alle Tests aus.
-Docker ist *nicht* erforderlich – SQL-Tests sind initial deaktiviert (siehe <<sql-tests>>).
+Docker ist *nicht* erforderlich – SQL-Tests werden nur ausgeführt, wenn `RUN_DOCKER_TESTS=true` gesetzt ist (siehe <<sql-tests>>).
 
 === Alle verfügbaren Befehle anzeigen
 
@@ -192,15 +192,22 @@ just start-db
 [#sql-tests]
 == SQL-Tests aktivieren
 
-Die Tests, die Docker und PostgreSQL benötigen (`SqlPersistenceTest`, `ServiceSqlTest`, `CliSqlTest`), sind initial mit `@Disabled` annotiert.
+Die Tests, die Docker und PostgreSQL benötigen (`SqlPersistenceTest`, `ServiceSqlTest`, `CliSqlTest`), sind mit `@EnabledIfEnvironmentVariable(named = "RUN_DOCKER_TESTS", matches = "true")` geschützt.
+Damit läuft `just test` ohne Docker und ohne lokale PostgreSQL-Instanz.
 
-Sobald die SQL-Persistenz implementiert ist, kann die Annotation entfernt werden:
+Um die SQL-Tests bewusst mit Testcontainers auszuführen, muss Docker Desktop laufen und die Umgebungsvariable gesetzt werden:
 
-[source,kotlin]
+[source,powershell]
 ----
-// @Disabled("Requires Docker")  // <-- diese Zeile entfernen
-@Testcontainers
-class SqlPersistenceTest { ... }
+$env:RUN_DOCKER_TESTS = "true"
+./mvnw.cmd verify
 ----
 
-Danach benötigt `just test` eine laufende Docker-Instanz.
+Auf Linux/macOS:
+
+[source,bash]
+----
+RUN_DOCKER_TESTS=true ./mvnw verify
+----
+
+Die normale Anwendung verwendet weiterhin die Persistenz aus `applications/config.json`. Standardmäßig ist dort `FILE_SYSTEM` gesetzt; `SQL` wird also nur verwendet, wenn die Konfiguration entsprechend geändert und eine PostgreSQL-Datenbank gestartet wurde.
