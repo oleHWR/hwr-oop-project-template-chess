@@ -53,7 +53,19 @@ class OfferDrawTest {
 		
 		// when / then
 		assertThatThrownBy { game.offerDraw(Color.WHITE) }
-			.isInstanceOf(IllegalArgumentException::class.java)
+			.isInstanceOf(IllegalStateException::class.java)
 			.hasMessage("Game is not in progress")
+	}
+
+	@Test
+	fun `draw offer is removed when opponent makes a move`() {
+		val offered = Game(GameID("game-1"))
+			.offerDraw(Color.WHITE)
+
+		val afterWhiteMove = offered.makeMove(Move(Square(File.E, 2), Square(File.E, 4)))
+		val afterBlackMove = afterWhiteMove.makeMove(Move(Square(File.E, 7), Square(File.E, 5)))
+
+		assertThat(afterWhiteMove.pendingDrawOfferBy).isEqualTo(Color.WHITE)
+		assertThat(afterBlackMove.pendingDrawOfferBy).isNull()
 	}
 }

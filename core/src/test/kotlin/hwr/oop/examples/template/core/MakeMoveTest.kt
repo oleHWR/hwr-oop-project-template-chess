@@ -100,7 +100,7 @@ class MakeMoveTest {
 		
 		// when / then
 		assertThatThrownBy { game.makeMove(anyMove) }
-			.isInstanceOf(IllegalArgumentException::class.java)
+			.isInstanceOf(IllegalStateException::class.java)
 			.hasMessage("Game is not in progress")
 	}
 

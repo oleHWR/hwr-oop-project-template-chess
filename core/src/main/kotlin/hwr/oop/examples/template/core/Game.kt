@@ -110,7 +110,7 @@ class Game(
 	}
 
 	fun makeMove(move: Move): Game {
-		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+		check(status == GameStatus.ONGOING) { "Game is not in progress" }
 		require(move in availableMoves()) { "Move is not available" }
 
 		val movingPiece = board.pieceAt(move.from)
@@ -125,6 +125,7 @@ class Game(
 
 		val nextEnPassantTarget = computeEnPassantTarget(movingPiece, move)
 		val nextTurn = turn.next()
+		val nextDrawOffer = if (pendingDrawOfferBy == turn.color) pendingDrawOfferBy else null
 		val nextKingSquare = nextBoard.kingSquare(nextTurn.color)
 		val nextPositionStatus = when {
 			nextKingSquare == null -> PositionStatus.NORMAL
@@ -139,7 +140,7 @@ class Game(
 			turn = nextTurn,
 			status = GameStatus.ONGOING,
 			positionStatus = nextPositionStatus,
-			pendingDrawOfferBy = pendingDrawOfferBy,
+			pendingDrawOfferBy = nextDrawOffer,
 			whitePlayerId = whitePlayerId,
 			blackPlayerId = blackPlayerId,
 			halfmoveClock = nextHalfmoveClock,
@@ -151,7 +152,7 @@ class Game(
 		return probe.copy(
 			status = if (endResult == null) GameStatus.ONGOING else GameStatus.FINISHED,
 			result = endResult,
-			pendingDrawOfferBy = if (endResult == null) pendingDrawOfferBy else null,
+			pendingDrawOfferBy = if (endResult == null) nextDrawOffer else null,
 		)
 	}
 
@@ -269,7 +270,7 @@ class Game(
 	}
 
 	fun offerDraw(by: Color): Game {
-		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+		check(status == GameStatus.ONGOING) { "Game is not in progress" }
 		require(pendingDrawOfferBy == null) { "A draw offer is already pending" }
 		require(by == turn.color) { "Only the side to move may offer a draw" }
 
@@ -293,7 +294,7 @@ class Game(
 	}
 
 	fun resign(by: Color): Game {
-		require(status == GameStatus.ONGOING) { "Game is not in progress" }
+		check(status == GameStatus.ONGOING) { "Game is not in progress" }
 
 		return copy(
 			status = GameStatus.FINISHED,
@@ -366,7 +367,16 @@ class Game(
 
 	private fun positionKey(): String {
 		val pieces = board.pieces()
-			.map { "${it.type}${it.color}${it.position.file}${it.position.rank}" }
+			.map {
+				// hasMoved changes the legal castling moves of kings and rooks.
+				// For the other pieces it does not change the position under chess rules.
+				val castlingState = if (it.type == PieceType.KING || it.type == PieceType.ROOK) {
+					it.hasMoved
+				} else {
+					false
+				}
+				"${it.type}${it.color}${it.position.file}${it.position.rank}$castlingState"
+			}
 			.sorted()
 			.joinToString(",")
 		return "$pieces|${turn.color}|${enPassantTarget?.let { "${it.file}${it.rank}" } ?: "-"}"

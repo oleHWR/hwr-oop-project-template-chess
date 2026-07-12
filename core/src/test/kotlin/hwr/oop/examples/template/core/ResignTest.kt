@@ -68,7 +68,7 @@ class ResignTest {
 		
 		// when / then
 		assertThatThrownBy { game.resign(Color.WHITE) }
-			.isInstanceOf(IllegalArgumentException::class.java)
+			.isInstanceOf(IllegalStateException::class.java)
 			.hasMessage("Game is not in progress")
 	}
 

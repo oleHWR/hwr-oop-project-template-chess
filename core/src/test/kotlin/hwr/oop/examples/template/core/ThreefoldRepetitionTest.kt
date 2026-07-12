@@ -54,4 +54,30 @@ class ThreefoldRepetitionTest {
 
 		assertThat(game.status).isEqualTo(GameStatus.ONGOING)
 	}
+
+	@Test
+	fun `returning a rook does not repeat the old castling rights`() {
+		var game = Game(GameID("g"))
+			.makeMove(Move(Square(File.H, 2), Square(File.H, 3)))
+			.makeMove(Move(Square(File.G, 8), Square(File.F, 6)))
+			.makeMove(Move(Square(File.H, 1), Square(File.H, 2)))
+			.makeMove(Move(Square(File.F, 6), Square(File.G, 8)))
+			.makeMove(Move(Square(File.H, 2), Square(File.H, 1)))
+			.makeMove(Move(Square(File.G, 8), Square(File.F, 6)))
+
+		game = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
+		game = game.makeMove(Move(Square(File.F, 6), Square(File.G, 8)))
+		game = game.makeMove(Move(Square(File.C, 3), Square(File.B, 1)))
+		game = game.makeMove(Move(Square(File.G, 8), Square(File.F, 6)))
+
+		// The pieces had occupied these squares three times, but the first
+		// occurrence still had castling rights and must not count.
+		assertThat(game.status).isEqualTo(GameStatus.ONGOING)
+
+		game = game.makeMove(Move(Square(File.B, 1), Square(File.C, 3)))
+		game = game.makeMove(Move(Square(File.F, 6), Square(File.G, 8)))
+		game = game.makeMove(Move(Square(File.C, 3), Square(File.B, 1)))
+
+		assertThat(game.result).isEqualTo(GameResult(GameEndReason.THREEFOLD_REPETITION))
+	}
 }

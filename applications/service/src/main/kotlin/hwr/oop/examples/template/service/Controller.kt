@@ -24,6 +24,7 @@ import hwr.oop.examples.template.service.model.Piece
 import hwr.oop.examples.template.service.model.ResignRequest
 import hwr.oop.examples.template.service.model.StartGameRequest
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -36,6 +37,7 @@ class Controller(
 
 	override fun getAvailableMoves(gameId: String?): ResponseEntity<AvailableMovesResponse> {
 		val game = persistence.loadById(GameID(requireNotNull(gameId)))
+		check(game.status == GameStatus.ONGOING) { "Game is not in progress" }
 		val response = AvailableMovesResponse(
 			game.availableMoves().map { move ->
 				AvailableMove(move.from.toDto(), move.to.toDto()).apply {
@@ -60,7 +62,7 @@ class Controller(
 			blackPlayerId = request.blackPlayerId,
 		)
 		persistence.save(game)
-		return ResponseEntity.ok(GameCreatedResponse(gameId))
+		return ResponseEntity.status(HttpStatus.CREATED).body(GameCreatedResponse(gameId))
 	}
 
 	override fun acceptDraw(

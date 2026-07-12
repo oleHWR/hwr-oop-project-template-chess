@@ -65,7 +65,7 @@ class ServiceFileSystemTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""{"whitePlayerId":"alice","blackPlayerId":"bob"}""")
 		)
-			.andExpect(status().isOk)
+			.andExpect(status().isCreated)
 			.andExpect(jsonPath("$.gameId").isNotEmpty)
 	}
 
@@ -100,7 +100,9 @@ class ServiceFileSystemTest {
 					"""{"playerId":"bob","from":{"file":"E","rank":2},"to":{"file":"E","rank":4}}"""
 				)
 		)
-			.andExpect(status().isInternalServerError)
+			.andExpect(status().isBadRequest)
+			.andExpect(jsonPath("$.status").value(400))
+			.andExpect(jsonPath("$.error").value("Bad Request"))
 
 		val stored = persistence.loadById(GameID(gameId))
 		assertThat(stored.turn.color).isEqualTo(Color.WHITE)
@@ -120,7 +122,7 @@ class ServiceFileSystemTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""{"playerId":"alice"}""")
 		)
-			.andExpect(status().isInternalServerError)
+			.andExpect(status().isBadRequest)
 
 		val stored = persistence.loadById(GameID(gameId))
 		assertThat(stored.pendingDrawOfferBy).isEqualTo(Color.WHITE)
@@ -146,6 +148,46 @@ class ServiceFileSystemTest {
 		)
 			.andExpect(status().isOk)
 			.andExpect(jsonPath("$.status").value("RESIGNED"))
+	}
+
+	@Test
+	fun `missing game returns not found`() {
+		mockMvc.perform(get("/games/does-not-exist"))
+			.andExpect(status().isNotFound)
+			.andExpect(jsonPath("$.status").value(404))
+			.andExpect(jsonPath("$.error").value("Not Found"))
+	}
+
+	@Test
+	fun `action on finished game returns conflict`() {
+		val gameId = createGame()
+		mockMvc.perform(
+			post("/games/$gameId/resignation")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""{"playerId":"alice"}""")
+		).andExpect(status().isOk)
+
+		mockMvc.perform(
+			post("/games/$gameId/moves")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(
+					"""{"playerId":"alice","from":{"file":"E","rank":2},"to":{"file":"E","rank":4}}"""
+				)
+		)
+			.andExpect(status().isConflict)
+			.andExpect(jsonPath("$.status").value(409))
+			.andExpect(jsonPath("$.error").value("Conflict"))
+	}
+
+	@Test
+	fun `malformed request returns bad request`() {
+		mockMvc.perform(
+			post("/games")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("not-json")
+		)
+			.andExpect(status().isBadRequest)
+			.andExpect(jsonPath("$.status").value(400))
 	}
 
 	private fun createGame(): String {

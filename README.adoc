@@ -5,14 +5,17 @@ This repository contains a student project created for an ongoing lecture on obj
 WARNING: This code is for educational purposes only.
 Do not rely on it!
 
-== Feature Liste
+== Feature-Liste
 
-* [x] Implemented board and pieces
-* [x] Implemented ability to move pieces
-* [x] Implemented ability to capture pieces
-* [x] Implemented turn advancement & game states
-* [ ] WIP Complexer Chess rules
-* [ ] WIP turn history and persistance
+* [x] Schachbrett, Figuren und Startaufstellung
+* [x] Legale Züge und Schlagen von Figuren
+* [x] Spielerzuordnung, Zugwechsel und Spielstatus
+* [x] Rochade, en passant und Bauernumwandlung
+* [x] Schach, Schachmatt, Patt und mehrere Remis-Regeln
+* [x] Zughistorie für Rücknahme und 50-Züge-Regel
+* [x] Dateisystem-Persistenz als JSON
+* [x] Optionale PostgreSQL-Persistenz
+* [x] Anbindung an CLI und REST-Service
 
 == Modulstruktur
 
@@ -58,6 +61,32 @@ just test
 Führt alle Tests aus.
 Docker ist *nicht* erforderlich – SQL-Tests werden nur ausgeführt, wenn `RUN_DOCKER_TESTS=true` gesetzt ist (siehe <<sql-tests>>).
 
+=== CLI
+
+Nach einem Build kann die CLI über `just cli` genutzt werden:
+
+[source,bash]
+----
+just build
+
+just cli startGame --game-id demo-game --white-player-id alice --black-player-id bob
+just cli onGameID demo-game getGame
+just cli onGameID demo-game makeMove --player-id alice --from E2 --to E4
+----
+
+Bei einer Bauernumwandlung kann die gewünschte Figur angegeben werden:
+
+[source,bash]
+----
+just cli onGameID demo-game makeMove --player-id alice --from E7 --to E8 --promotion-piece QUEEN
+----
+
+=== Persistenz konfigurieren
+
+Die aktive Persistenz steht in `applications/config.json`.
+Standardmäßig ist `FILE_SYSTEM` gesetzt; für PostgreSQL kann der Wert auf `SQL` geändert werden.
+Dafür muss die Datenbank laufen (siehe <<docker-und-postgresql>>).
+
 === Alle verfügbaren Befehle anzeigen
 
 [source,bash]
@@ -82,80 +111,32 @@ just
 | `just mutation-test-open` | Aktuellen PITest-Bericht im Browser öffnen
 |===
 
-== Arbeiten mit dem Template-Repository (Upstream)
+== Tests
 
-Dieses Projekt ist ein Fork des Template-Repositories.
-Das Template bleibt als `upstream` eingebunden, damit Aktualisierungen daraus übernommen werden können.
-Die eigene Fork bei GitHub ist `origin`.
-
-=== Schritt 1: Fork erstellen
-
-Öffne das Template-Repository auf GitHub und klicke auf *Fork*.
-Damit entsteht eine eigene Kopie unter deinem GitHub-Account.
-
-=== Schritt 2: Fork klonen
+Die Tests laufen mit:
 
 [source,bash]
 ----
-git clone https://github.com/DEIN_USER/TEMPLATE_FORK_REPO.git
-cd DEIN_REPO
+just test
 ----
 
-Nach dem Klonen ist deine Fork automatisch als `origin` eingetragen.
+Das entspricht `./mvnw verify`.
+Docker-basierte SQL-Tests sind dabei deaktiviert, solange `RUN_DOCKER_TESTS` nicht gesetzt ist.
 
-=== Schritt 3: Template als Upstream hinzufügen
+Mutationstests werden nur für das `core`-Modul ausgeführt:
 
 [source,bash]
 ----
-git remote add upstream https://github.com/stefreschke/hwr-oop-project-template-chess.git
+just mutation-test
 ----
 
-=== Remotes prüfen
+Der Bericht liegt danach unter `core/target/pit-reports/index.html` und kann mit `just mutation-test-open` geöffnet werden.
 
-[source,bash]
-----
-git remote -v
-----
+== Template-Repository
 
-Erwartete Ausgabe:
+Das Repository wird mit dem Template `stefreschke/hwr-oop-project-template-chess` synchron gehalten.
 
-....
-origin      https://github.com/DEIN_USER/TEMPLATE_FORK_REPO.git (fetch)
-origin      https://github.com/DEIN_USER/TEMPLATE_FORK_REPO.git (push)
-upstream    https://github.com/stefreschke/hwr-oop-project-template-chess.git (fetch)
-upstream    https://github.com/stefreschke/hwr-oop-project-template-chess.git (push)
-....
-
-=== Änderungen aus dem Template übernehmen
-
-Wenn das Template aktualisiert wurde, kannst du die Änderungen wie folgt in deine Fork übernehmen:
-
-[source,bash]
-----
-# Neueste Änderungen vom Template holen
-git fetch upstream
-
-# Template-Änderungen in deinen main-Branch mergen
-git merge upstream/main
-----
-
-Bei Konflikten müssen diese manuell aufgelöst und dann committed werden:
-
-[source,bash]
-----
-# Konflikte beheben, dann:
-git add .
-git commit -m "chore: merge upstream changes"
-git push
-----
-
-[NOTE]
-====
-Alternativ zu `git merge` kann auch `git rebase upstream/main` verwendet werden.
-Rebase ist idiomatischer, da es eine lineare Commit-History erzeugt – in der Praxis ist es jedoch etwas aufwendiger zu handhaben, vor allem bei Konflikten.
-Für dieses Projekt empfehlen wir daher, auf dem eigenen Fork einfach zu mergen.
-====
-
+[#docker-und-postgresql]
 == Docker und PostgreSQL
 
 === Docker installieren
@@ -210,4 +191,4 @@ Auf Linux/macOS:
 RUN_DOCKER_TESTS=true ./mvnw verify
 ----
 
-Die normale Anwendung verwendet weiterhin die Persistenz aus `applications/config.json`. Standardmäßig ist dort `FILE_SYSTEM` gesetzt; `SQL` wird also nur verwendet, wenn die Konfiguration entsprechend geändert und eine PostgreSQL-Datenbank gestartet wurde.
+Die normale Anwendung verwendet die Persistenz aus `applications/config.json`. Standardmäßig ist dort `FILE_SYSTEM` gesetzt; `SQL` wird also nur verwendet, wenn die Konfiguration entsprechend geändert und eine PostgreSQL-Datenbank gestartet wurde.
